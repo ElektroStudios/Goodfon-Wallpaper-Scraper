@@ -32,13 +32,13 @@ windows-applications
 
 # Goodfon Wallpaper Scraper
 
-### A rule-based, multi-threaded console application designed to scrape and download original-resolution wallpapers from Goodfon.com website. 
+### A rule-based, multi-threaded console application designed to scrape and download original-resolution wallpapers from [Goodfon.com](https://www.goodfon.com/) website. 
 
 ------------------
 
 ## 👋 Introduction
 
-**Goodfon Wallpaper Scraper** is a fully automated, rule-based wallpaper downloader built for mass-harvesting original-resolution wallpapers without manual intervention. By combining user-defined keyword filtering with automated session and IP management, the program handles catalog discovery and wallpaper extraction completely on autopilot, ensuring you only pull the content you actually want while handling all edge cases in the background.
+**Goodfon Wallpaper Scraper** is a fully automated, rule-based wallpaper downloader built for mass-harvesting original-resolution wallpapers from the **Goodfon.com** website without manual intervention. By combining user-defined keyword filtering with automated session and IP management, the program handles catalog discovery and wallpaper extraction completely on autopilot, ensuring you only pull the content you actually want while handling all edge cases in the background.
 
 ## 👌 Features
 
