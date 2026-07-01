@@ -1,0 +1,16 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                       #
+# The list of keywords used to filter out unwanted wallpapers.          #
+#                                                                       #
+# If any of these keywords are present in the URL, it will be skipped.  #
+#                                                                       #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+-ai-
+/ai-art/
+
+-food-
+/food/
+
+-new-year-
+/new-year/

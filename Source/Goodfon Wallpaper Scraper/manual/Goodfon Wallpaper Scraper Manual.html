@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoodFon Wallpaper Scraper — User Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /*
+   * ┌─────────────────────────────────────────────────────────┐
+   * │  COLOR GUIDE — edit these variables to change the theme │
+   * └─────────────────────────────────────────────────────────┘
+   */
+  :root {
+    --bg:        #171d25;
+    --bg2:       #1c2230;
+    --bg3:       #1f2633;
+    --panel:     #1c2330;
+    --border:    #28394d;
+    --border2:   #324455;
+    --accent:    #00e5ff;
+    --accent2:   #00ff88;
+    --accent3:   #ff6b35;
+    --accent4:   #c678dd;
+    --text:      #d4e1f0;
+    --text2:     #8aa4be;
+    --text3:     #556b82;
+    --warning:   #ffb347;
+    --danger:    #ff5370;
+    --success:   #00ff88;
+    --glow:      0 0 20px rgba(0,229,255,0.15);
+    --glow2:     0 0 40px rgba(0,229,255,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 52px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    animation: fadeDown 0.7s ease both 0.1s;
+  }
+
+  .hero h1 span.hi { color: var(--accent); }
+  .hero h1 span.lo { color: var(--text2); font-weight: 300; }
+
+  .hero-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--text3);
+    margin-top: 16px;
+    letter-spacing: 1px;
+    animation: fadeDown 0.7s ease both 0.2s;
+  }
+
+  .lang-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(23,29,37,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 12px 20px;
+  }
+
+  .lang-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 28px;
+    background: transparent;
+    color: var(--text3);
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+
+  .lang-btn:first-child { border-radius: 3px 0 0 3px; }
+  .lang-btn:last-child  { border-radius: 0 3px 3px 0; border-left: none; }
+
+  .lang-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(0,229,255,0.35);
+  }
+
+  .wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .lang-panel { display: none; }
+  .lang-panel.active { display: block; }
+
+  .section {
+    margin-top: 56px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border2), transparent);
+  }
+
+  .section h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .section p {
+    color: var(--text2);
+    font-size: 18px;
+    margin-bottom: 14px;
+    line-height: 1.75;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 24px;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step:hover {
+    border-left-color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .step::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0,229,255,0.03) 0%, transparent 40%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .step:hover::before { opacity: 1; }
+
+  .step-num {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 22px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--border2);
+    transition: color 0.3s;
+  }
+
+  .step:hover .step-num { color: var(--accent); }
+
+  .step-body {
+    padding: 18px 24px 18px 0;
+    user-select: text;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+    user-select: text;
+  }
+
+  .step-desc {
+    font-size: 18px;
+    color: var(--text2);
+    line-height: 1.65;
+    user-select: text;
+  }
+
+  .file-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .file-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+
+  .file-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), var(--glow2);
+  }
+
+  .file-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .file-card.search::after  { background: var(--accent); }
+  .file-card.forbid::after  { background: var(--danger); }
+  .file-card.require::after { background: var(--accent4); }
+
+  .file-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+  }
+
+  .file-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    color: var(--accent);
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+
+  .file-card.forbid .file-name  { color: var(--danger); }
+  .file-card.require .file-name { color: var(--accent4); }
+
+  .file-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .file-card p {
+    font-size: 15px;
+    color: var(--text2);
+    line-height: 1.65;
+  }
+
+  .code-block {
+    background: #111820;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 3px;
+    padding: 20px 24px;
+    margin: 18px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--accent2);
+    line-height: 1.8;
+    overflow-x: auto;
+    position: relative;
+    white-space: pre-line;
+  }
+
+  .code-block .comment { color: var(--text3); }
+  .code-block .keyword { color: var(--accent4); }
+  .code-block .value   { color: var(--warning); }
+
+  .code-label {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    top: 8px; right: 12px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .callout {
+    display: flex;
+    gap: 16px;
+    padding: 18px 22px;
+    border-radius: 3px;
+    margin: 20px 0;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .callout-icon { font-size: 20px; flex-shrink: 0; padding-top: 1px; }
+
+  .callout.info    { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); color: var(--text2); }
+  .callout.warning { background: rgba(255,179,71,0.06); border: 1px solid rgba(255,179,71,0.25); color: var(--text2); }
+  .callout.tip     { background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); color: var(--text2); }
+  .callout.danger  { background: rgba(255,83,112,0.06); border: 1px solid rgba(255,83,112,0.2); color: var(--text2); }
+
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 28px 0;
+    padding: 28px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .flow-node {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 10px 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    text-align: center;
+    min-width: 110px;
+    transition: all 0.25s;
+  }
+
+  .flow-node:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(0,229,255,0.2);
+  }
+
+  .flow-node .fn-label { color: var(--text3); font-size: 13px; letter-spacing: 1px; display: block; }
+  .flow-node .fn-name  { color: var(--text); font-size: 15px; }
+
+  .flow-node.accent .fn-name { color: var(--accent); }
+  .flow-node.success .fn-name { color: var(--success); }
+  .flow-node.danger  .fn-name { color: var(--danger); }
+  .flow-node.warn    .fn-name { color: var(--warning); }
+  .flow-node.auth    .fn-name { color: var(--accent4); }
+
+  .flow-arrow { color: var(--text3); font-size: 20px; }
+
+  .logic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+
+  .logic-table th {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    text-align: left;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .logic-table td {
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    color: var(--text2);
+    vertical-align: top;
+  }
+
+  .logic-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .badge.skip    { background: rgba(255,83,112,0.15); color: var(--danger); border: 1px solid rgba(255,83,112,0.3); }
+  .badge.process { background: rgba(0,255,136,0.1);  color: var(--success); border: 1px solid rgba(0,255,136,0.25); }
+
+  .faq-item {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    margin-bottom: 10px;
+    transition: border-left-color 0.25s;
+    overflow: hidden;
+  }
+
+  .faq-item:hover { border-left-color: var(--accent4); }
+
+  .faq-q {
+    padding: 16px 20px;
+    font-weight: 600;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    background: var(--panel);
+    transition: background 0.2s;
+  }
+
+  .faq-q:hover { background: var(--bg3); }
+  .faq-q .arrow { color: var(--text3); transition: transform 0.25s; font-size: 14px; }
+  .faq-item.open .faq-q .arrow { transform: rotate(180deg); color: var(--accent4); }
+
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.25s;
+    font-size: 16px;
+    color: var(--text2);
+    line-height: 1.7;
+    background: var(--panel);
+    padding: 0 20px;
+  }
+
+  .faq-item.open .faq-a {
+    max-height: 400px;
+    padding: 0 20px 18px;
+  }
+
+  footer {
+    margin-top: 80px;
+    padding: 40px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer .ft-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  footer .ft-logo span { color: var(--accent); }
+
+  .highlight-cyan   { color: var(--accent);  font-weight: 600; }
+  .highlight-green  { color: var(--success); font-weight: 600; }
+  .highlight-red    { color: var(--danger);  font-weight: 600; }
+  .highlight-orange { color: var(--warning); font-weight: 600; }
+
+  strong { color: var(--text); font-weight: 700; }
+  code {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 2px;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1; }
+  }
+
+  .pulse { animation: pulse-glow 2.5s ease-in-out infinite; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media print {
+    .lang-bar { position: static; }
+    .grid-bg, body::before { display: none; }
+    body { background: #fff; color: #111; }
+    .lang-panel { display: block !important; }
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 50px 20px 40px; }
+    .wrapper { padding: 0 14px 60px; }
+    .file-cards { grid-template-columns: 1fr; }
+    .flow { gap: 5px; padding: 16px; }
+    .flow-node { min-width: 80px; padding: 8px 10px; }
+  }
+
+.code-block pre {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+}
+
+.code-block code {
+  display: block;
+  padding: 8px 15px; 
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  background-color: var(--bg);
+  color: var(--accent2);
+}
+
+.code-block code .comment {
+  color: var(--text3); 
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<header class="hero">
+  <div class="hero-tag pulse">⬡ User Manual · v1.0</div>
+  <h1>
+    <span class="lo">GoodFon Wallpaper</span><br>
+    <span class="hi">Scraper</span>
+  </h1>
+  <p class="hero-sub">// Fully Automated Media Downloader · EN / ES //</p>
+</header>
+
+<div class="lang-bar">
+  <button class="lang-btn active" onclick="setLang('en')">🇬🇧 English</button>
+  <button class="lang-btn"       onclick="setLang('es')">🇪🇸 Español</button>
+</div>
+
+<div class="wrapper">
+<div id="panel-en" class="lang-panel active">
+
+  <div class="section">
+    <div class="section-label">01 · Overview</div>
+    <h2>What is GoodFon Wallpaper Scraper?</h2>
+    <p>
+      <strong>GoodFon Wallpaper Scraper</strong> is a Windows desktop application that automates
+      the mass-harvesting of original-resolution wallpapers from <strong>Goodfon.com</strong>.
+    </p>
+    <p>
+      It is a fully automated, rule-based media downloader. By combining user-defined keyword filtering with automated session and IP management, the program handles catalog discovery and asset extraction completely on autopilot. It uses up to 24 concurrent threads per page, smartly rotates your Goodfon accounts to bypass NSFW restrictions, and integrates with Proton VPN to avoid server-side daily download limits.
+    </p>
+    <div class="callout warning">
+      <span class="callout-icon">⚠️</span>
+      <span>Goodfon enforces a strict hard limit of 80 daily downloads per guest IP. To run this scraper indefinitely and download tens of thousands of images, <strong>Proton VPN must be installed and running</strong>.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">02 · How It Works</div>
+    <h2>Processing Pipeline</h2>
+    <p>Understanding the internal flow helps you configure the tool correctly:</p>
+    <div class="flow">
+      <div class="flow-node accent">
+        <span class="fn-label">input</span>
+        <span class="fn-name">Search Terms</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-label">http query</span>
+        <span class="fn-name">Goodfon.com</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node warn">
+        <span class="fn-label">filter</span>
+        <span class="fn-name">Forbidden Keywords</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node auth">
+        <span class="fn-label">if 403 restricted</span>
+        <span class="fn-name">Auth / Rotate VPN</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node success">
+        <span class="fn-label">output</span>
+        <span class="fn-name">Original Wallpaper</span>
+      </div>
+    </div>
+    <p style="margin-top:0">
+      The tool processes pages sequentially but downloads 24 wallpapers at once. If it detects a forbidden keyword in the image URL, it drops it. If an image requires an account (mature content), it automatically injects a session from <code>Accounts.json</code>. If the IP hits the daily limit, it automatically triggers a Proton VPN server switch.
+    </p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">03 · Quick Start</div>
+    <h2>Getting Up &amp; Running</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Locate the configuration files</div>
+          <div class="step-desc">
+            Inside the <code>Config</code> folder next to the executable, you will find <code>Search Terms.txt</code>, <code>Forbidden Keywords.txt</code>, and <code>Accounts.json</code>.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Fill in your search terms</div>
+          <div class="step-desc">
+            Edit <code>Search Terms.txt</code>. Add one query per line. The scraper automatically processes these terms as search queries, user profiles, and tag indices.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Define what to exclude (optional)</div>
+          <div class="step-desc">
+            Edit <code>Forbidden Keywords.txt</code>. Any wallpaper URL containing these words will be skipped. Good for filtering out things like watermarks or specific unwanted tags.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <div class="step-title">Add Goodfon accounts (optional but recommended)</div>
+          <div class="step-desc">
+            Edit <code>Accounts.json</code> to include registered Goodfon accounts. These are strictly used when the scraper hits a <code>403 Forbidden</code> barrier (mature/restricted content).
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-body">
+          <div class="step-title">Connect your VPN</div>
+          <div class="step-desc">
+            Ensure the <strong>Proton VPN</strong> client for Windows is running and connected. A paid plan is heavily recommended to avoid severe cooldown penalties during automatic server rotations.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">06</div>
+        <div class="step-body">
+          <div class="step-title">Run the application</div>
+          <div class="step-desc">
+            Double-click the executable. The app will navigate Goodfon, track downloaded URLs via MD5 hashes (to avoid duplicates in future sessions), and save full-res images to the <code>Output</code> folder.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">04 · Configuration Files</div>
+    <h2>The Three Files in Detail</h2>
+
+    <div class="file-cards">
+      <div class="file-card search">
+        <div class="file-icon">🔍</div>
+        <div class="file-name">Search Terms.txt</div>
+        <h3>Search Terms</h3>
+        <p>
+          Each line is sent as a query. The app intelligently checks if the term corresponds to a general search, a user profile, or a tag category to maximize results.
+        </p>
+      </div>
+      <div class="file-card forbid">
+        <div class="file-icon">🚫</div>
+        <div class="file-name">Forbidden Keywords.txt</div>
+        <h3>Forbidden Keywords</h3>
+        <p>
+          Case-insensitive hard blacklist applied against the final image URL. If a URL contains any of these words, it's skipped.
+        </p>
+      </div>
+      <div class="file-card require">
+        <div class="file-icon">🔐</div>
+        <div class="file-name">Accounts.json</div>
+        <h3>User Accounts</h3>
+        <p>
+          JSON file holding login credentials. Accounts are used to browse the uncensored catalog and download restricted content. Each account grants 100 extra daily downloads.
+        </p>
+      </div>
+    </div>
+
+<div class="code-block">
+    <span class="code-label">Search Terms.txt — example</span>
+    <pre><code><span class="comment"># Search queries and tags</span>
+anime
+girls
+cyberpunk 2077</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Accounts.json — example</span>
+    <pre><code>[
+  {
+    <span class="keyword">"Username"</span>: <span class="value">"user123"</span>,
+    <span class="keyword">"Password"</span>: <span class="value">"pass123"</span>,
+    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+  },
+  {
+    <span class="keyword">"Username"</span>: <span class="value">"user456"</span>,
+    <span class="keyword">"Password"</span>: <span class="value">"pass456"</span>,
+    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+  }
+]</code></pre>
+</div>
+</div>
+
+  <div class="section">
+    <div class="section-label">05 · Download Logic</div>
+    <h2>Download Decision Matrix</h2>
+    <p>How the scraper decides to fetch a wallpaper:</p>
+
+    <table class="logic-table">
+      <thead>
+        <tr>
+          <th>Matches Forbidden?</th>
+          <th>Is 403 Restricted?</th>
+          <th>Account Available?</th>
+          <th>Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="highlight-red">YES</span></td>
+          <td>Any</td>
+          <td>Any</td>
+          <td><span class="badge skip">SKIP</span> — URL discarded</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-green">NO</span></td>
+          <td>Any</td>
+          <td><span class="badge process">DOWNLOAD</span> — Downloaded via guest IP</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-red">YES</span></td>
+          <td><span class="highlight-green">YES</span></td>
+          <td><span class="badge process">DOWNLOAD</span> — Uses account session</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-red">YES</span></td>
+          <td><span class="highlight-red">NO (Limits reached)</span></td>
+          <td><span class="badge skip">SKIP</span> — User account required</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-label">06 · Best Practices & Tips</div>
+    <h2>Maximize Your Harvesting</h2>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <span><strong>Bulk Account Creation:</strong> You can use temporary mail services like <a href="https://temp-mail.org/" style="color:var(--accent);">temp-mail.org</a> to quickly register multiple user accounts on Goodfon in just a few minutes. Every registered account grants you an individual allocation of 100 daily downloads for mature content.</span>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">🔄</span>
+      <span><strong>IP Rotation Limit:</strong> When you hit the 80 downloads per IP limit, the app will automatically trigger Proton VPN to rotate servers. If you aren't using a VPN, the app will just start failing to download.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">07 · FAQ</div>
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I use the free version of Proton VPN?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        While the program can technically interface with the free tier of the Proton VPN client for Windows, doing so is highly unstable. The free version imposes severe multi-minute cooldown penalties for server switching, which forces the scraper to halt or time out. For an uninterrupted automated experience, <strong>a paid Proton VPN plan is heavily recommended</strong>.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I leave the scraper running 24/7 in the background?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        No. The application is architected as an intensive, single-run batch processor. It is not designed to run permanently as a 24/7 background service; internal metrics, download counters, and account-exhaustion states are tracked in volatile memory and do not automatically reset or refresh after a 24-hour clock cycle without a clean app restart.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Why am I getting empty results or 0 pages found?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        This usually means your search term doesn't exist on Goodfon, or the site is temporarily blocking your current IP before the scraper can even initiate a VPN rotation. Check your terms or try connecting to a different VPN server manually before starting.
+      </div>
+    </div>
+  </div>
+
+</div><div id="panel-es" class="lang-panel">
+
+  <div class="section">
+    <div class="section-label">01 · Introducción</div>
+    <h2>¿Qué es GoodFon Wallpaper Scraper?</h2>
+    <p>
+      <strong>GoodFon Wallpaper Scraper</strong> es una aplicación de escritorio para Windows diseñada para la recolección masiva y automatizada de wallpapers en resolución original desde <strong>Goodfon.com</strong>.
+    </p>
+    <p>
+      Se trata de un descargador completamente automatizado basado en reglas. Combinando el filtrado por palabras clave con la gestión automática de sesiones y cambios de IP, el programa descubre los catálogos y extrae el contenido en piloto automático. Utiliza hasta 24 hilos concurrentes por página, rota de manera inteligente tus cuentas de Goodfon para saltar restricciones NSFW y se integra con Proton VPN para evadir los límites diarios de descargas.
+    </p>
+    <div class="callout warning">
+      <span class="callout-icon">⚠️</span>
+      <span>Goodfon impone un límite estricto de 80 descargas diarias por IP invitada. Para que el scraper funcione ininterrumpidamente y descargue decenas de miles de imágenes, <strong>es necesario tener instalado y ejecutándose Proton VPN</strong>.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">02 · Funcionamiento</div>
+    <h2>Pipeline de Procesamiento</h2>
+    <p>Entender el flujo interno te ayudará a configurar la herramienta correctamente:</p>
+    <div class="flow">
+      <div class="flow-node accent">
+        <span class="fn-label">entrada</span>
+        <span class="fn-name">Search Terms</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node">
+        <span class="fn-label">consulta http</span>
+        <span class="fn-name">Goodfon.com</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node warn">
+        <span class="fn-label">filtro</span>
+        <span class="fn-name">Palabras Prohibidas</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node auth">
+        <span class="fn-label">si 403 restringido</span>
+        <span class="fn-name">Cuenta / Rotar VPN</span>
+      </div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-node success">
+        <span class="fn-label">salida</span>
+        <span class="fn-name">Wallpaper Original</span>
+      </div>
+    </div>
+    <p style="margin-top:0">
+      La herramienta procesa las páginas secuencialmente pero descarga hasta 24 wallpapers de forma simultánea. Si detecta una palabra prohibida en la URL de la imagen, la descarta. Si la imagen requiere una cuenta (contenido maduro/NSFW), inyecta automáticamente una sesión del archivo <code>Accounts.json</code>. Si la IP alcanza el límite diario, el programa fuerza automáticamente a Proton VPN a cambiar de servidor.
+    </p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">03 · Inicio Rápido</div>
+    <h2>Empezar a Usar la Aplicación</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Localiza los archivos de configuración</div>
+          <div class="step-desc">
+            Dentro de la carpeta <code>Config</code> que está junto al ejecutable encontrarás <code>Search Terms.txt</code>, <code>Forbidden Keywords.txt</code> y <code>Accounts.json</code>.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Rellena tus términos de búsqueda</div>
+          <div class="step-desc">
+            Edita <code>Search Terms.txt</code> con una consulta por línea. El scraper los procesará automáticamente buscando en resultados generales, perfiles de usuario y categorías de etiquetas.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Define qué excluir (opcional)</div>
+          <div class="step-desc">
+            Edita <code>Forbidden Keywords.txt</code>. Cualquier URL de imagen que contenga estas palabras será ignorada. Útil para filtrar marcas de agua o etiquetas indeseadas.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <div class="step-title">Añade cuentas de Goodfon (recomendado)</div>
+          <div class="step-desc">
+            Edita <code>Accounts.json</code> para incluir tus cuentas registradas de Goodfon. Solo se utilizarán para descargar contenido restringido (error 403 Forbidden).
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-body">
+          <div class="step-title">Conecta tu VPN</div>
+          <div class="step-desc">
+            Asegúrate de que el cliente de <strong>Proton VPN</strong> para Windows está abierto y conectado a un servidor. Se recomienda encarecidamente utilizar un plan de pago para evitar tiempos de espera penalizadores al rotar la IP.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">06</div>
+        <div class="step-body">
+          <div class="step-title">Ejecuta la aplicación</div>
+          <div class="step-desc">
+            Haz doble clic en el ejecutable. La aplicación navegará por Goodfon, guardará un registro (hash MD5) de lo ya descargado para evitar duplicados en sesiones futuras, y guardará las imágenes en la carpeta <code>Output</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">04 · Archivos de Configuración</div>
+    <h2>Los Tres Archivos en Detalle</h2>
+
+    <div class="file-cards">
+      <div class="file-card search">
+        <div class="file-icon">🔍</div>
+        <div class="file-name">Search Terms.txt</div>
+        <h3>Términos de Búsqueda</h3>
+        <p>
+          Cada línea se envía como consulta. La app comprueba inteligentemente si el término corresponde a una búsqueda general, un perfil de usuario o una etiqueta.
+        </p>
+      </div>
+      <div class="file-card forbid">
+        <div class="file-icon">🚫</div>
+        <div class="file-name">Forbidden Keywords.txt</div>
+        <h3>Palabras Prohibidas</h3>
+        <p>
+          Lista negra insensible a mayúsculas aplicada contra la URL final de la imagen. Si hay coincidencia, la descarga se cancela automáticamente.
+        </p>
+      </div>
+      <div class="file-card require">
+        <div class="file-icon">🔐</div>
+        <div class="file-name">Accounts.json</div>
+        <h3>Cuentas de Usuario</h3>
+        <p>
+          Archivo JSON con tus credenciales. Las cuentas se usan para ver el catálogo sin censura y descargar contenido restringido. Cada cuenta concede 100 descargas diarias adicionales.
+        </p>
+      </div>
+    </div>
+
+<div class="code-block">
+    <span class="code-label">Search Terms.txt — ejemplo</span>
+    <pre><code><span class="comment"># Consultas de búsqueda o tags</span>
+anime
+girls
+cyberpunk 2077</code></pre>
+</div>
+
+<div class="code-block">
+    <span class="code-label">Accounts.json — ejemplo</span>
+    <pre><code>[
+  {
+    <span class="keyword">"Username"</span>: <span class="value">"usuario123"</span>,
+    <span class="keyword">"Password"</span>: <span class="value">"clave123"</span>,
+    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+  },
+  {
+    <span class="keyword">"Username"</span>: <span class="value">"usuario456"</span>,
+    <span class="keyword">"Password"</span>: <span class="value">"clave456"</span>,
+    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+  }
+]</code></pre>
+</div>
+</div>
+
+  <div class="section">
+    <div class="section-label">05 · Lógica de Descarga</div>
+    <h2>Matriz de Decisión</h2>
+    <p>Cómo decide el scraper si descargar un wallpaper o no:</p>
+
+    <table class="logic-table">
+      <thead>
+        <tr>
+          <th>¿Palabra Prohibida?</th>
+          <th>¿Restringido (403)?</th>
+          <th>¿Cuenta Disponible?</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="highlight-red">SÍ</span></td>
+          <td>Indiferente</td>
+          <td>Indiferente</td>
+          <td><span class="badge skip">IGNORAR</span> — Descartado</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-green">NO</span></td>
+          <td>Indiferente</td>
+          <td><span class="badge process">DESCARGAR</span> — Vía IP invitada</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-red">SÍ</span></td>
+          <td><span class="highlight-green">SÍ</span></td>
+          <td><span class="badge process">DESCARGAR</span> — Usa sesión de cuenta</td>
+        </tr>
+        <tr>
+          <td><span class="highlight-green">NO</span></td>
+          <td><span class="highlight-red">SÍ</span></td>
+          <td><span class="highlight-red">NO (Límites agotados)</span></td>
+          <td><span class="badge skip">IGNORAR</span> — Requiere cuenta</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-label">06 · Limitaciones y Trucos</div>
+    <h2>Maximiza tus Descargas</h2>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <span><strong>Creación masiva de cuentas:</strong> Puedes utilizar servicios de correo temporal como por ejemplo <a href="https://temp-mail.org/" style="color:var(--accent);">temp-mail.org</a> para registrar múltiples cuentas de usuario en Goodfon en cuestión de minutos. Cada cuenta te concede 100 descargas diarias exclusivas de contenido maduro/NSFW.</span>
+    </div>
+    <div class="callout info">
+      <span class="callout-icon">🔄</span>
+      <span><strong>Límite de Rotación IP:</strong> Cuando alcances las 80 descargas en la misma IP, el programa rotará automáticamente tu VPN. Si no estás utilizando el cliente de Proton VPN, las descargas simplemente empezarán a fallar por límite alcanzado.</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">07 · Preguntas Frecuentes</div>
+    <h2>FAQ</h2>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Puedo utilizar la versión gratuita de Proton VPN?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        Aunque puedes utilizar la versión gratuita del cliente Proton VPN para Windows, los resultados pueden ser inestables debido a limitaciones implícitas de la versión gratuita, que además impone tiempos prolongados de espera de varios minutos para permitir el cambio del servidor actual. La opción más recomendable es utilizar un plan de pago para poder descargar decenas de miles de wallpapers en cuestión de horas.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Puedo dejar el scraper funcionando 24/7 en segundo plano?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        No está previsto un escenario donde el programa se deje ejecutando por más de 24 horas continuas. La aplicación está diseñada como un procesador por lotes (batch) intensivo; los contadores internos de descargas y el estado de agotamiento de las cuentas no se renuevan automáticamente al pasar de día. Es necesario cerrar y volver a abrir la aplicación.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Por qué mis búsquedas devuelven cero resultados o páginas vacías?
+        <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        Normalmente significa que el término no existe en Goodfon, o bien que el servidor de Goodfon ha bloqueado temporalmente tu IP invitada antes siquiera de que el scraper pudiese iniciar el protocolo de rotación. Prueba con otros términos o cambia manualmente el servidor VPN antes de iniciar.
+      </div>
+    </div>
+  </div>
+
+</div></div><footer>
+  <div class="ft-logo">
+    <span>GoodFon</span> Wallpaper Scraper
+  </div>
+  <p style="color:var(--text3);font-size:14px;font-family:'Share Tech Mono',monospace;margin-top:10px;letter-spacing:1px;">
+    // User Manual · How To Start //
+  </p>
+</footer>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('.lang-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + lang).classList.add('active');
+    document.querySelector('.lang-btn[onclick*="' + lang + '"]').classList.add('active');
+  }
+
+  function toggleFaq(el) {
+    const item = el.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    el.closest('.lang-panel').querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  const sections = document.querySelectorAll('.section');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.animationPlayState = 'running';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  sections.forEach(s => {
+    s.style.animationPlayState = 'paused';
+    obs.observe(s);
+  });
+</script>
+</body>
+</html>

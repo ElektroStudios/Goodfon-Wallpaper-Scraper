@@ -1,57 +1,86 @@
 <!-- Common Project Tags:
+badfon 
+cli 
 command-line 
 console-applications 
-desktop-app 
-desktop-application 
 dotnet 
-dotnet-core 
-netcore 
+goodfon 
+images 
 netframework 
 netframework48 
+scraper 
 tool 
 tools 
 vbnet 
 visualstudio 
+wallpaper 
+wallpaper-app 
+wallpapers 
+web-crawler 
+web-crawling 
+web-scraper 
+web-scraping 
+webcrawler 
+webcrawling 
+webscraper 
+webscraping 
 windows 
 windows-app 
 windows-application 
 windows-applications 
-windows-forms 
-winforms 
  -->
 
-# PROJECT NAME
+# Goodfon Wallpaper Scraper
 
-### PROJECT DESCRIPTION
+### A rule-based, multi-threaded console application designed to scrape and download original-resolution wallpapers from Goodfon.com website. 
 
 ------------------
 
 ## 👋 Introduction
 
-INTRODUCTION TEXT
+**Goodfon Wallpaper Scraper** is a fully automated, rule-based wallpaper downloader built for mass-harvesting original-resolution wallpapers without manual intervention. By combining user-defined keyword filtering with automated session and IP management, the program handles catalog discovery and wallpaper extraction completely on autopilot, ensuring you only pull the content you actually want while handling all edge cases in the background.
 
 ## 👌 Features
 
-FEATURES TEXT
+* **Threaded Concurrency:** Processes catalog pages sequentially while spinning up to 24 concurrent worker tasks per page to validate, process, and download wallpapers simultaneously.
+* **Smart Account Rotation:** Seamlessly manages multiple GoodFon accounts. Accounts are kept strictly in a browsing session state to navigate unrestricted un-censored (NSFW) indices, and are dynamically selected for downloading only when a direct IP request hits a `403 (Forbidden)` barrier requiring authorized rights.
+* **Bypass Server Limits:** Incorporates an automated VPN control mechanism that monitors IP usage and proactively forces a VPN server rotation before hitting GoodFon's hard daily limit of 80 anonymous downloads per IP.
+* **Advanced Content Filtering:** Avoids unwanted content using robust, case-insensitive keyword filtering rules (`Forbidden Keywords.txt`) across all resolved image URLs.
+* **Duplication Guard:** Tracks download history across sessions via MD5 URL hashing, completely avoiding redundant requests or re-downloading existing local files.
 
 ## 🖼️ Screenshots
 
-![screenshot](/Images/screenshot.png)
+![screenshot](/Images/screenshot1.png)
+
+![screenshot](/Images/screenshot2.png)
 
 ## 🎦 Videos
 
-<!-- Download a recorded video by clicking [here](/Video/video.mp4) -->
+[Goodfon Wallpaper Scraper DEMO VIDEO](https://github.com/user-attachments/assets/b8abcb2d-a941-4061-b205-5e454e8d3db6)
 
-<!-- See a recorded video by clicking on the following button:
-[![PROJECT_NAME DEMO VIDEO](Images/demo_video.jpg)](https://www.youtube.com/watch?v=XXXXXXXXX)  -->
+*Note: This video showcases an early alpha version of the program. The terminal output layout, log performance indicators, or general UI structures might slightly differ from the current production codebase.*
 
 ## 📝 Requirements
 
 - Microsoft Windows OS.
+- [Proton VPN client for Windows (free or paid plan).](https://protonvpn.com/download)
 
 ## 🤖 Getting Started
 
-Download the latest compilation by clicking [here](https://github.com/ElektroStudios/PROJECT_NAME/releases/latest).
+Download the latest release by clicking [here](https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/releases/latest) and start using it!.
+
+Also, you can read a manual in HTML format by clicking [here](https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/releases/latest) .
+
+## 💡 Tips
+
+* **Bulk Account Creation:** You can use temporary mail services like [temp-mail.org](https://temp-mail.org/) to quickly register multiple user accounts on Goodfon in just a few minutes. 
+* **Maximize Restricted Pulls:** Since every registered account grants you an individual allocation of 100 daily downloads for mature/restricted content, adding a batch of configured credentials to your `Accounts.json` file ensures a massive threshold of restricted assets can be downloaded concurrently during a single session.
+
+## ⚠️ Limitations
+
+* **Proton VPN Client Dependency:** While the program can technically interface with the free tier of the Proton VPN client for Windows, doing so is highly unstable. The free version imposes severe multi-minute cooldown penalties for server switching, which forces the scraper to halt or time out during a rotation cycle. For an uninterrupted automated experience capable of pulling tens of thousands of wallpapers in a matter of hours, **a paid Proton VPN plan is heavily recommended**.
+* **Hard Single-Session Cap:** Without any running instance of Proton VPN, the scraper is strictly limited by the web-server's native restrictions: 80 daily downloads for guest IPs, or 100 downloads if a registered Goodfon account is provided.
+* **No 24h+ Standby Cycle:** The application is architected as an intensive, single-run batch processor. It is not designed to run permanently as a 24/7 background service; internal metrics, download counters, and account-exhaustion states (`DailyLimitReached`) are tracked in volatile memory and do not automatically reset or refresh after a 24-hour clock cycle without a clean app restart.
 
 ## 🔄 Change Log
 
@@ -62,6 +91,7 @@ Explore the complete list of changes, bug fixes, and improvements across differe
 This work relies on the following resources: 
 
  - [.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework)
+ - [HtmlAgilityPack](https://html-agility-pack.net/)
 
 ## ⚠️ Disclaimer:
 
@@ -71,7 +101,7 @@ This Work has no affiliation, approval or endorsement by the author(s) of the th
 
 ## 💪 Contributing
 
-Your contribution is highly appreciated!. If you have any ideas, suggestions, or encounter issues, feel free to open an issue by clicking [here](https://github.com/ElektroStudios/PROJECT_NAME/issues/new/choose). 
+Your contribution is highly appreciated!. If you have any ideas, suggestions, or encounter issues, feel free to open an issue by clicking [here](https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/issues/new/choose). 
 
 Your input helps make this Work better for everyone. Thank you for your support! 🚀
 

@@ -1,0 +1,11 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+# The list of search terms to query on GoodFon website. One term per line.  #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+girls
+devushka
+
+cats
+koshka
