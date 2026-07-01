@@ -69,7 +69,7 @@ windows-applications
 
 Download the latest release by clicking [here](https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/releases/latest) and start using it!.
 
-Also, you can read a manual in HTML format by clicking [here](https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/releases/latest) .
+Also, you can read a manual in HTML format by clicking [here](https://htmlpreview.github.io/?https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/blob/main/Source/Goodfon%20Wallpaper%20Scraper/manual/Goodfon%20Wallpaper%20Scraper%20Manual.html).
 
 ## 💡 Tips
 
