@@ -305,7 +305,7 @@ Public Module Program
         Catch ex As Exception
             Console.WriteLine()
             Dim errMsg As String = If(ex.InnerException IsNot Nothing, ex.InnerException.Message, ex.Message)
-            Program.ExitWithMessage($"FATAL ERROR 0x{ex.HResult:X8}: {errMsg}", exitCode:=ex.HResult, ConsoleColor.Red)
+            Program.ExitWithMessage($"FATAL ERROR 0x{ex.HResult}: {errMsg}", exitCode:=ex.HResult, ConsoleColor.Red)
 
         Finally
             Program.vpnRotationInProgress = 0
@@ -1299,7 +1299,7 @@ Public Module Program
             Console.WriteLine()
         End If
 
-        Console.WriteLine($"Exiting application with exit code: {exitCode} (0x{exitCode:X8}) ...")
+        Console.WriteLine($"Exiting application with exit code: {exitCode} (0x{exitCode}) ...")
 #If DEBUG Then
         Console.WriteLine()
         Program.WriteColoredLine("[!] This message only appears in DEBUG mode to prevent accidental termination.", ConsoleColor.Yellow)

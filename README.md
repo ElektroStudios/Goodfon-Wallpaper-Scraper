@@ -30,10 +30,16 @@ windows-application
 windows-applications 
  -->
 
-# Goodfon Wallpaper Scraper
+<div align="center">
+  <img src="/Images/App.ico" width="80" alt="Goodfon Wallpaper Scraper Logo">
+  
+  <h1>Goodfon Wallpaper Scraper</h1>
 
 ### A rule-based, multi-threaded console application designed to scrape and download original-resolution wallpapers from [Goodfon.com](https://www.goodfon.com/) website. 
 
+</div>
+
+------------------
 ------------------
 
 ## 👋 Introduction
