@@ -31,7 +31,7 @@ windows-applications
  -->
 
 <div align="center">
-  <img src="/Images/App.ico" width="120" alt="Goodfon Wallpaper Scraper Logo">
+  <img src="/Images/App.ico" width="150" alt="Goodfon Wallpaper Scraper Logo">
   
   <h1>Goodfon Wallpaper Scraper</h1>
 
