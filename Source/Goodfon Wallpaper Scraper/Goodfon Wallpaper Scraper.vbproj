@@ -157,6 +157,7 @@
     <Compile Include="DevCase\Win32\Win32LibNames.vb" />
     <Compile Include="DevCase\Win32\WindowMessages.vb" />
     <Compile Include="DevCase\Win32\WindowPlacement.vb" />
+    <Compile Include="Helpers\FileSystemHelper.vb" />
     <Compile Include="Program.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
@@ -216,6 +217,7 @@
     </None>
     <Content Include="App.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

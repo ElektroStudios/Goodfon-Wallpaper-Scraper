@@ -86,7 +86,6 @@ Also, you can read a manual in HTML format by clicking [here](https://htmlprevie
 
 * **Proton VPN Client Dependency:** While the program can technically interface with the free tier of the Proton VPN client for Windows, doing so is highly unstable. The free version imposes severe multi-minute cooldown penalties for server switching, which forces the scraper to halt or time out during a rotation cycle. For an uninterrupted automated experience capable of pulling tens of thousands of wallpapers in a matter of hours, **a paid Proton VPN plan is heavily recommended**.
 * **Hard Single-Session Cap:** Without any running instance of Proton VPN, the scraper is strictly limited by the web-server's native restrictions: 80 daily downloads for guest IPs, or 100 downloads if a registered Goodfon account is provided.
-* **No 24h+ Standby Cycle:** The application is architected as an intensive, single-run batch processor. It is not designed to run permanently as a 24/7 background service; internal metrics, download counters, and account-exhaustion states (`DailyLimitReached`) are tracked in volatile memory and do not automatically reset or refresh after a 24-hour clock cycle without a clean app restart.
 
 ## 🔄 Change Log
 

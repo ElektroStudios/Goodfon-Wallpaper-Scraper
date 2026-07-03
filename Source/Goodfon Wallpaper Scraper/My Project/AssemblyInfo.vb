@@ -10,8 +10,8 @@ Imports System.Runtime.InteropServices
 ' Review the values of the assembly attributes
 
 <Assembly: AssemblyTitle("Goodfon Wallpaper Scraper")>
-<Assembly: AssemblyDescription("")>
-<Assembly: AssemblyCompany("")>
+<Assembly: AssemblyDescription("A rule-based, multi-threaded console application designed to scrape and download original-resolution wallpapers from Goodfon.com website.")>
+<Assembly: AssemblyCompany("ElektroStudios")>
 <Assembly: AssemblyProduct("Goodfon Wallpaper Scraper")>
 <Assembly: AssemblyCopyright("Copyright © ElektroStudios 2026")>
 <Assembly: AssemblyTrademark("")>
@@ -29,6 +29,6 @@ Imports System.Runtime.InteropServices
 '      Revision
 '
 
-<Assembly: AssemblyVersion("1.0.0.0")>
-<Assembly: AssemblyFileVersion("1.0.0.0")>
+<Assembly: AssemblyVersion("1.0.1.0")>
+<Assembly: AssemblyFileVersion("1.0.1.0")>
 <Assembly: NeutralResourcesLanguage("en")>

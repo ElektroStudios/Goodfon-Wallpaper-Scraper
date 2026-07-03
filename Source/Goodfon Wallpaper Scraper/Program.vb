@@ -10,11 +10,13 @@ Option Infer Off
 
 Imports System.Collections.Generic
 Imports System.Diagnostics
+Imports System.Globalization
 Imports System.IO
 Imports System.Linq
 Imports System.Net
 Imports System.Net.Http
 Imports System.Security.Cryptography
+Imports System.Text
 Imports System.Text.Json
 Imports System.Text.RegularExpressions
 Imports System.Threading
@@ -122,6 +124,24 @@ Public Module Program
     ''' </summary>
     Private currentAccountIndex As Integer = 0
 
+    ''' <summary>
+    ''' Dictionary to track the exact time an account reached its daily limit for the 24h cooldown reset.
+    ''' </summary>
+    Private ReadOnly accountLimitReachedTimes As New Dictionary(Of GoodFonAuth, Date)()
+
+    ''' <summary>
+    ''' The encoding used for console output, 
+    ''' and reading and writing to text files.
+    ''' <para></para>
+    ''' It is set to UTF-8 with BOM (Byte Order Mark).
+    ''' </summary>
+    Friend ReadOnly ConsoleEncoding As New UTF8Encoding(encoderShouldEmitUTF8Identifier:=False)
+
+    ''' <summary>
+    ''' The <see cref="CultureInfo"/> instance representing the "en-US" culture.
+    ''' </summary>
+    Friend ReadOnly CultureInfoEnUs As New CultureInfo("en-US")
+
 #End Region
 
 #Region " Entry Point "
@@ -131,10 +151,10 @@ Public Module Program
     ''' </summary>
     <DebuggerStepperBoundary>
     Public Sub Main()
-        Thread.CurrentThread.CurrentCulture = AppGlobals.CultureInfoEnUs
-        Thread.CurrentThread.CurrentUICulture = AppGlobals.CultureInfoEnUs
+        Thread.CurrentThread.CurrentCulture = Program.CultureInfoEnUs
+        Thread.CurrentThread.CurrentUICulture = Program.CultureInfoEnUs
 
-        Console.OutputEncoding = AppGlobals.TextEncoding
+        Console.OutputEncoding = Program.ConsoleEncoding
         Console.BackgroundColor = ConsoleColor.Black
         Console.ForegroundColor = ConsoleColor.White
 
@@ -284,7 +304,7 @@ Public Module Program
                     Program.WriteColoredLine($"Discovering user profile page: {wallpaperUserUrl}", ConsoleColor.Cyan)
                     Program.ProcessUrl(wallpaperUserUrl, client, outputDirPath).Wait()
 
-                    For tagIndex As Integer = 0 To 5
+                    For tagIndex As Integer = 0 To 3
                         Dim wallpaperTagUrl As String = If(tagIndex = 0,
                             $"{AppGlobals.BaseGoodfonTagUrl}/{searchTerm.Replace(" "c, "+"c)}/",
                             $"{AppGlobals.BaseGoodfonTagUrl}/{searchTerm.Replace(" "c, "+"c)}-{tagIndex}/")
@@ -334,13 +354,24 @@ Public Module Program
     Private Async Function ProcessUrl(baseUrl As String, client As HttpClient, saveFolder As String) As Task
 
         Dim lastPageNumber As Integer
+        Dim totalWallpapers As Integer
+
+        Dim startedWithAccount As Boolean = False
+        Dim availableAuth As GoodFonAuth = Program.GetAvailableAuthHandler()
+
         Try
             ' Try get page number with authenticated client as it will list more wallpapers.
             Dim pageNumberHttpClient As HttpClient = client
-            If (Program.accountAuths IsNot Nothing) AndAlso (Program.accountAuths.Count > 0) Then
-                pageNumberHttpClient = Program.accountAuths(0).Client
+
+            ' Use an available auth, instead of strictly using accountAuths(0) which could be exhausted.
+            If availableAuth IsNot Nothing Then
+                startedWithAccount = True
+                pageNumberHttpClient = availableAuth.Client
             End If
-            lastPageNumber = Await Program.GetLastPageNumberAsync(pageNumberHttpClient, baseUrl)
+
+            Dim pageInfo As (LastPage As Integer, TotalWallpapers As Integer) = Await Program.GetLastPageAndTotalItemsAsync(pageNumberHttpClient, baseUrl)
+            lastPageNumber = pageInfo.LastPage
+            totalWallpapers = pageInfo.TotalWallpapers
 
         Catch ex As TaskCanceledException
             Program.WriteColoredLine($"HTTP request has timed out ({AppGlobals.HttpClientTimeOut:mm:ss} minutes)", ConsoleColor.Red)
@@ -366,7 +397,7 @@ Public Module Program
 
         End Try
 
-        Program.WriteColoredLine($"Found {lastPageNumber:N0} pages (approximately {AppGlobals.MaxWallpaperItemsPerPage * lastPageNumber:N0} wallpapers)", ConsoleColor.DarkCyan)
+        Program.WriteColoredLine($"Found {lastPageNumber:N0} pages (total {totalWallpapers:N0} wallpapers)", ConsoleColor.DarkCyan)
         Console.WriteLine()
 
         ' ── Outer sequential page loop ─────────────────────────────────────────
@@ -401,14 +432,14 @@ Public Module Program
                 Using pageReq As New HttpRequestMessage(HttpMethod.Get, pageReqUri)
                     pageReq.Headers.Referrer = AppGlobals.Referrer
 
-                    If (Program.accountAuths IsNot Nothing) AndAlso (Program.accountAuths.Count > 0) Then
-                        ' We use the first account strictly for browsing the catalog to maintain the session
-                        ' and see all pages (including NSFW), regardless of its daily download limit status.
-                        Dim browseAuth As GoodFonAuth = Program.accountAuths(0)
-
-                        Dim cookieHeader As String = browseAuth.CookieContainer.GetCookieHeader(pageReqUri)
-                        If Not String.IsNullOrWhiteSpace(cookieHeader) Then
-                            pageReq.Headers.Add("Cookie", cookieHeader)
+                    ' Use the available auth handler for browsing, instead of accountAuths(0).
+                    If startedWithAccount Then
+                        Dim browseAuth As GoodFonAuth = Program.GetAvailableAuthHandler()
+                        If browseAuth IsNot Nothing Then
+                            Dim cookieHeader As String = browseAuth.CookieContainer.GetCookieHeader(pageReqUri)
+                            If Not String.IsNullOrWhiteSpace(cookieHeader) Then
+                                pageReq.Headers.Add("Cookie", cookieHeader)
+                            End If
                         End If
                     End If
 
@@ -550,8 +581,9 @@ Public Module Program
                                     Return
                                 End If
 
-                                If Program.UrlContainsAnyKeyword(capturedUrl, Program.forbiddenKeywords) Then
-                                    Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Forbidden match", ConsoleColor.DarkYellow)
+                                Dim refForbiddenKeywordMatched As String = Nothing
+                                If Program.UrlContainsAnyKeyword(capturedUrl, Program.forbiddenKeywords, refForbiddenKeywordMatched) Then
+                                    Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Forbidden match ({refForbiddenKeywordMatched})", ConsoleColor.DarkYellow)
                                     Interlocked.Increment(skippedOnThisPage)
                                     Interlocked.Increment(Program.totalSkippedWallpaperCount)
                                     Return
@@ -900,14 +932,16 @@ Public Module Program
                 Return TriState.False
             End If
 
-            Dim savePath As String = Path.Combine(saveFolder, fileName)
-            Dim saveDir As String = Path.GetDirectoryName(savePath)
+            Dim savePath As String = Path.Combine(Path.GetFullPath(saveFolder), fileName)
+            Dim extendedSavePath As String = FileSystemHelper.GetExtendedPath(savePath)
+            Dim extendedSaveDir As String = Path.GetDirectoryName(extendedSavePath)
+
             Try
-                If Not Directory.Exists(saveDir) Then
-                    Directory.CreateDirectory(saveDir)
+                If Not Directory.Exists(extendedSaveDir) Then
+                    Directory.CreateDirectory(extendedSaveDir)
                 End If
 
-                File.WriteAllBytes(savePath, imageBytes)
+                File.WriteAllBytes(extendedSavePath, imageBytes)
                 Interlocked.Increment(Program.totalSavedWallpaperCount)
                 Interlocked.Increment(Program.downloadsOnCurrentIp)
             Catch ex As Exception
@@ -934,9 +968,11 @@ Public Module Program
             Dim added As Boolean = Program.processedUrlHashes.Add(urlHash)
 
             If added Then
-                Dim dirPath As String = Path.GetDirectoryName(AppGlobals.HistoryFilePath)
-                If Not Directory.Exists(dirPath) Then
-                    Directory.CreateDirectory(dirPath)
+                Dim extendedHistoryPath As String = FileSystemHelper.GetExtendedPath(Path.GetFullPath(AppGlobals.HistoryFilePath))
+                Dim extendedHistoryDir As String = Path.GetDirectoryName(extendedHistoryPath)
+
+                If Not Directory.Exists(extendedHistoryDir) Then
+                    Directory.CreateDirectory(extendedHistoryDir)
                 End If
 
                 Const maxRetries As Integer = 10
@@ -946,7 +982,7 @@ Public Module Program
 
                 While Not isWritten AndAlso currentRetry < maxRetries
                     Try
-                        File.AppendAllText(AppGlobals.HistoryFilePath, $"{urlHash}{Environment.NewLine}", AppGlobals.TextEncoding)
+                        File.AppendAllText(extendedHistoryPath, $"{urlHash}{Environment.NewLine}", AppGlobals.TextEncoding)
                         isWritten = True
                     Catch ex As IOException
                         currentRetry += 1
@@ -1016,21 +1052,19 @@ Public Module Program
     ''' Thrown when pagination cannot be detected from the provided HTML.
     ''' </exception>
     <DebuggerStepThrough>
-    Private Async Function GetLastPageNumberAsync(client As HttpClient, baseUrl As String) As Task(Of Integer)
+    Private Async Function GetLastPageAndTotalItemsAsync(client As HttpClient, baseUrl As String) As Task(Of (LastPage As Integer, TotalWallpapers As Integer))
 
         Dim html As String = Await client.GetStringAsync(baseUrl)
-
         Dim doc As New HtmlDocument()
         doc.LoadHtml(html)
 
         Dim lastPageNumber As Integer? = Nothing
 
-        ' 1. Category listing pages
+        ' 1. Category listing pages (RESTORED ORIGINAL EXACT LOGIC)
         Dim pageLinks As HtmlNodeCollection = doc.DocumentNode.SelectNodes("//a[contains(@href,'index-') and contains(@href,'.html')]")
 
         If pageLinks IsNot Nothing Then
             For Each link As HtmlNode In pageLinks
-
                 Dim href As String = link.GetAttributeValue("href", String.Empty)
                 Dim match As Match = AppGlobals.PaginationIndexRegex.Match(href)
                 If match.Success Then
@@ -1044,15 +1078,12 @@ Public Module Program
             Next
         End If
 
-        ' 2. Search result paginator
+        ' 2. Search result paginator (RESTORED ORIGINAL EXACT LOGIC)
         Dim paginator As HtmlNode = doc.DocumentNode.SelectSingleNode("//div[contains(@class,'paginator')]")
 
         If paginator IsNot Nothing Then
-
             Dim lastLink As HtmlNode = paginator.SelectSingleNode(".//a[contains(.,'Last')]")
-
             If lastLink IsNot Nothing Then
-
                 Dim href As String = lastLink.GetAttributeValue("href", String.Empty)
                 Dim match As Match = AppGlobals.PaginationQueryRegex.Match(href)
                 If match.Success Then
@@ -1066,11 +1097,63 @@ Public Module Program
             End If
         End If
 
-        If Not lastPageNumber.HasValue Then
-            Throw New InvalidOperationException("Failed to identify last page number in the provided HTML.")
+        ' Helper function to accurately count ONLY valid wallpaper nodes, excluding user profiles and empty hrefs
+        Dim countValidWallpapers As Func(Of HtmlDocument, Integer) =
+            Function(d As HtmlDocument) As Integer
+                Dim nodes As HtmlNodeCollection = d.DocumentNode.SelectNodes("//div[contains(@class,'wallpapers__item')]/div/a")
+                If nodes Is Nothing Then
+                    Return 0
+                End If
+
+                Dim count As Integer = 0
+                For Each node As HtmlNode In nodes
+                    Dim href As String = node.GetAttributeValue("href", String.Empty)
+                    If Not String.IsNullOrWhiteSpace(href) AndAlso Not href.Equals("#"c) AndAlso href.IndexOf("/user/", StringComparison.OrdinalIgnoreCase) = -1 Then
+                        count += 1
+                    End If
+                Next
+                Return count
+            End Function
+
+        Dim finalLastPage As Integer = If(lastPageNumber.HasValue, lastPageNumber.Value, 1)
+        Dim totalWallpapers As Integer = 0
+
+        If finalLastPage <= 1 Then
+            totalWallpapers = countValidWallpapers(doc)
+
+            ' Matches original exception throw if strictly 0 results are found overall
+            If totalWallpapers = 0 AndAlso Not lastPageNumber.HasValue Then
+                Throw New InvalidOperationException("Failed to identify last page number in the provided HTML.")
+            End If
+        Else
+            Dim lastPageUrl As String = String.Empty
+
+            If baseUrl.IndexOf("/tags/", StringComparison.OrdinalIgnoreCase) > 0 Then
+                lastPageUrl = $"{baseUrl}index-{finalLastPage}.html"
+            ElseIf baseUrl.IndexOf("/user/", StringComparison.OrdinalIgnoreCase) > 0 Then
+                lastPageUrl = $"{baseUrl}/?&page={finalLastPage}"
+            ElseIf baseUrl.IndexOf("?q", StringComparison.OrdinalIgnoreCase) > 0 Then
+                lastPageUrl = $"{baseUrl}&page={finalLastPage}"
+            End If
+
+            If Not String.IsNullOrWhiteSpace(lastPageUrl) Then
+                Try
+                    Dim lastPageHtml As String = Await client.GetStringAsync(lastPageUrl)
+                    Dim lastPageDoc As New HtmlDocument()
+                    lastPageDoc.LoadHtml(lastPageHtml)
+
+                    Dim itemsOnLastPage As Integer = countValidWallpapers(lastPageDoc)
+                    totalWallpapers = ((finalLastPage - 1) * AppGlobals.MaxWallpaperItemsPerPage) + itemsOnLastPage
+
+                Catch ex As Exception
+                    totalWallpapers = (finalLastPage - 1) * AppGlobals.MaxWallpaperItemsPerPage
+                End Try
+            Else
+                totalWallpapers = (finalLastPage - 1) * AppGlobals.MaxWallpaperItemsPerPage
+            End If
         End If
 
-        Return lastPageNumber.Value
+        Return (finalLastPage, totalWallpapers)
     End Function
 
     ''' <summary>
@@ -1085,12 +1168,16 @@ Public Module Program
     ''' The set of keywords to look for in the text. If any keyword is found, the function returns True.
     ''' </param>
     ''' 
+    ''' <param name="refKeywordMatched">
+    ''' When this method returns, contains the first keyword that was found in the text, or an empty string if no keywords were found.
+    ''' </param>
+    ''' 
     ''' <returns>
     ''' Returns True if any of the keywords are present in the text; 
     ''' otherwise, returns False.
     ''' </returns>
     <DebuggerStepThrough>
-    Private Function UrlContainsAnyKeyword(url As String, keywords As HashSet(Of String)) As Boolean
+    Private Function UrlContainsAnyKeyword(url As String, keywords As HashSet(Of String), ByRef refKeywordMatched As String) As Boolean
 
         If keywords Is Nothing OrElse keywords.Count = 0 Then
             Return False
@@ -1098,6 +1185,7 @@ Public Module Program
 
         For Each word As String In keywords
             If url.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 Then
+                refKeywordMatched = word
                 Return True
             End If
         Next word
@@ -1113,20 +1201,26 @@ Public Module Program
     <DebuggerStepThrough>
     Private Sub LoadConfigFiles()
 
-        If Not File.Exists(AppGlobals.SearchTermsFilePath) Then
+        Dim extendedSearchTermsFilePath As String =
+            FileSystemHelper.GetExtendedPath(Path.GetFullPath(AppGlobals.SearchTermsFilePath))
+
+        If Not File.Exists(extendedSearchTermsFilePath) Then
             Program.ExitWithMessage($"[ERROR] Search terms file not found: {AppGlobals.SearchTermsFilePath}", 2, ConsoleColor.Red)
         End If
 
         Program.searchTerms =
-            (From line In File.ReadAllLines(AppGlobals.SearchTermsFilePath, AppGlobals.TextEncoding)
+            (From line In File.ReadAllLines(extendedSearchTermsFilePath, AppGlobals.TextEncoding)
              Let trimmed = line.Trim()
              Where Not String.IsNullOrWhiteSpace(trimmed) AndAlso Not trimmed.StartsWith("#"c)
              Select trimmed
             ).ToHashSet(StringComparer.OrdinalIgnoreCase)
 
-        If File.Exists(AppGlobals.ForbiddenKeywordsFilePath) Then
+        Dim extendedForbiddenKeywordsFilePath As String =
+            FileSystemHelper.GetExtendedPath(Path.GetFullPath(AppGlobals.ForbiddenKeywordsFilePath))
+
+        If File.Exists(extendedForbiddenKeywordsFilePath) Then
             Program.forbiddenKeywords =
-                (From line As String In File.ReadAllLines(AppGlobals.ForbiddenKeywordsFilePath, AppGlobals.TextEncoding)
+                (From line As String In File.ReadAllLines(extendedForbiddenKeywordsFilePath, AppGlobals.TextEncoding)
                  Let trimmed As String = line.Trim()
                  Where Not String.IsNullOrWhiteSpace(trimmed) AndAlso Not trimmed.StartsWith("#"c)
                  Select trimmed
@@ -1154,12 +1248,15 @@ Public Module Program
     <DebuggerStepThrough>
     Private Function LoadGoodFonAccounts() As IReadOnlyList(Of GoodFonAccountConfig)
 
-        If Not File.Exists(AppGlobals.GoodfonAccountsFilePath) Then
+        Dim extendedGoodfonAccountsFilePath As String =
+            FileSystemHelper.GetExtendedPath(Path.GetFullPath(AppGlobals.GoodfonAccountsFilePath))
+
+        If Not File.Exists(extendedGoodfonAccountsFilePath) Then
             Return Nothing
             ' Throw New FileNotFoundException($"Config file not found: {AppGlobals.GoodfonAuthConfigFilePath}")
         End If
 
-        Dim jsonContent As String = File.ReadAllText(AppGlobals.GoodfonAccountsFilePath, AppGlobals.TextEncoding)
+        Dim jsonContent As String = File.ReadAllText(extendedGoodfonAccountsFilePath, AppGlobals.TextEncoding)
 
         If String.IsNullOrWhiteSpace(jsonContent) Then
             Throw New InvalidOperationException("Accounts json file is empty.")
@@ -1185,10 +1282,13 @@ Public Module Program
     <DebuggerStepThrough>
     Private Sub LoadUrlsHistoryHashes()
 
+        Dim extendedHistoryFilePath As String =
+            FileSystemHelper.GetExtendedPath(Path.GetFullPath(AppGlobals.HistoryFilePath))
+
         Program.processedUrlHashes =
-            If(Not File.Exists(AppGlobals.HistoryFilePath),
+            If(Not File.Exists(extendedHistoryFilePath),
                 New HashSet(Of String)(StringComparer.OrdinalIgnoreCase),
-                (From line As String In File.ReadAllLines(AppGlobals.HistoryFilePath, AppGlobals.TextEncoding)
+                (From line As String In File.ReadAllLines(extendedHistoryFilePath, AppGlobals.TextEncoding)
                  Let trimmed As String = line.Trim()
                  Where Not String.IsNullOrWhiteSpace(trimmed) AndAlso Not trimmed.StartsWith("#"c)
                  Select trimmed
@@ -1312,12 +1412,34 @@ Public Module Program
     <DebuggerStepThrough>
     Private Function GetAvailableAuthHandler() As GoodFonAuth
 
-        ' Lock the account list to ensure thread-safe access and modification.
         SyncLock Program.accountLockObject
             Dim authToUse As GoodFonAuth = Nothing
 
             If (Program.accountAuths IsNot Nothing) AndAlso (Program.accountAuths.Count <> 0) Then
 
+                ' Check for any account that has exhausted its limits to see if 24 hours + 2 mins have passed.
+                For i As Integer = 0 To Program.accountAuths.Count - 1
+                    Dim auth As GoodFonAuth = Program.accountAuths(i)
+
+                    If auth.DailyLimitReached AndAlso Program.accountLimitReachedTimes.ContainsKey(auth) Then
+                        Dim limitTime As Date = Program.accountLimitReachedTimes(auth)
+                        Dim timeSpanSinceLimit As TimeSpan = Date.Now - limitTime
+
+                        ' 24 hours + 2 minutes = 1442 minutes
+                        If timeSpanSinceLimit.TotalMinutes >= 1442 Then
+                            auth.DailyLimitReached = False
+                            Program.accountLimitReachedTimes.Remove(auth)
+                            Program.WriteColoredLine($"[Auth] The daily limit for user-account {i + 1:N0} has been automatically reset after 24 hours.", ConsoleColor.Green)
+
+                            ' Return the index point if we skipped past this account previously
+                            If Program.currentAccountIndex > i Then
+                                Program.currentAccountIndex = i
+                            End If
+                        End If
+                    End If
+                Next
+
+                ' Retrieve the current active account.
                 If Program.currentAccountIndex < Program.accountAuths.Count Then
                     Dim currentAth As GoodFonAuth = Program.accountAuths(Program.currentAccountIndex)
 
@@ -1329,6 +1451,7 @@ Public Module Program
 
             Return authToUse
         End SyncLock
+
     End Function
 
     ''' <summary>
@@ -1338,10 +1461,12 @@ Public Module Program
     <DebuggerStepThrough>
     Private Sub MarkAccountLimitReached(failedAuth As GoodFonAuth)
 
-        ' Lock the account list to ensure thread-safe access and modification.
         SyncLock Program.accountLockObject
             If Not failedAuth.DailyLimitReached Then
                 failedAuth.DailyLimitReached = True
+
+                ' Record the exact time the limit was reached to evaluate the 24h reset cooldown.
+                Program.accountLimitReachedTimes(failedAuth) = Date.Now
 
                 ' Only increment the global index if the account we just exhausted is still the current active one.
                 If (Program.currentAccountIndex < Program.accountAuths.Count) AndAlso (Program.accountAuths(Program.currentAccountIndex) Is failedAuth) Then
@@ -1349,7 +1474,7 @@ Public Module Program
                     Program.currentAccountIndex += 1
 
                     If Program.currentAccountIndex >= Program.accountAuths.Count Then
-                        Program.WriteColoredLine("[Auth] All user-accounts have reached their daily download limit.", ConsoleColor.Yellow)
+                        Program.WriteColoredLine("[Auth] All user-accounts have reached their daily download limit. Operating on anonymous IP limit mode.", ConsoleColor.Yellow)
                     End If
 
                 End If

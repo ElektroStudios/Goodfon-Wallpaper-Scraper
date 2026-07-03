@@ -108,21 +108,16 @@ Friend Module AppGlobals
     Friend ReadOnly PageFetchingMaxTimeout As TimeSpan = TimeSpan.FromMinutes(10)
 
     ''' <summary>
+    ''' The timeout duration for all HTTP client requests.
+    ''' </summary>
+    Friend ReadOnly HttpClientTimeOut As TimeSpan = TimeSpan.FromMilliseconds(150000) ' 2:30 min; .NET default is 100000 ms (1:40 min)
+
+    ''' <summary>
     ''' The encoding used for console output, 
     ''' and reading and writing to text files.
     ''' <para></para>
     ''' It is set to UTF-8 with BOM (Byte Order Mark).
     ''' </summary>
     Friend ReadOnly TextEncoding As New UTF8Encoding(encoderShouldEmitUTF8Identifier:=True)
-
-    ''' <summary>
-    ''' The <see cref="CultureInfo"/> instance representing the "en-US" culture.
-    ''' </summary>
-    Friend ReadOnly CultureInfoEnUs As New CultureInfo("en-US")
-
-    ''' <summary>
-    ''' The timeout duration for all HTTP client requests.
-    ''' </summary>
-    Friend ReadOnly HttpClientTimeOut As TimeSpan = TimeSpan.FromMilliseconds(150000) ' 2:30 min; .NET default is 100000 ms (1:40 min)
 
 End Module
