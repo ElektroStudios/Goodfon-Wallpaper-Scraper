@@ -1,4 +1,4 @@
-# Goodfon Wallpaper Scraper Change Log 📋
+﻿# Goodfon Wallpaper Scraper Change Log 📋
 
 ## v1.0.1 **(current)** 🆕
  - Added full support for long file paths to bypass the 260-character MAX_PATH limitation.
