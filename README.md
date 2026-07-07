@@ -58,7 +58,7 @@ windows-applications
     <a href="https://learn.microsoft.com/en-us/windows/apps/"><img src="https://img.shields.io/badge/platform-Windows-lightgray.svg" alt="Platform"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/ElektroStudios/Goodfon-Wallpaper-Scraper" alt="License"></a>
   <br>
-    <a href="https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/archive/refs/heads/main.zip"><img src="https://img.shields.io/github/repo-size/ElektroStudios/Goodfon-Wallpaper-Scraper" alt="Repo size"></a>
+    <a href="https://api.github.com/repos/ElektroStudios/Goodfon-Wallpaper-Scraper/zipball"><img src="https://img.shields.io/github/repo-size/ElektroStudios/Goodfon-Wallpaper-Scraper" alt="Repo size"></a>
     <a href="https://somsubhra.github.io/github-release-stats/?username=ElektroStudios&repository=Goodfon-Wallpaper-Scraper"><img src="https://img.shields.io/github/downloads/ElektroStudios/Goodfon-Wallpaper-Scraper/total.svg?label=total%20downloads" alt="Total Downloads"></a>
     <a href="https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/commits"><img src="https://img.shields.io/github/last-commit/ElektroStudios/Goodfon-Wallpaper-Scraper" alt="Last commit"></a>
     <a href="https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper/pulls"><img src="https://img.shields.io/github/issues-pr/ElektroStudios/Goodfon-Wallpaper-Scraper" alt="Pull Requests"></a>
