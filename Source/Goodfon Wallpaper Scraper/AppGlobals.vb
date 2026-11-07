@@ -110,7 +110,15 @@ Friend Module AppGlobals
     ''' <summary>
     ''' The timeout duration for all HTTP client requests.
     ''' </summary>
-    Friend ReadOnly HttpClientTimeOut As TimeSpan = TimeSpan.FromMilliseconds(150000) ' 2:30 min; .NET default is 100000 ms (1:40 min)
+    Friend ReadOnly HttpClientTimeOut As TimeSpan = TimeSpan.FromMilliseconds(300000) ' 5:00 min; .NET default is 100000 ms (1:40 min)
+
+    ''' <summary>
+    ''' The <see cref="AppGlobals.HttpClientTimeOut"/> value formatted for console display, in "mm:ss" format.
+    ''' <para></para>
+    ''' Note: the ':' character must be escaped in <see cref="TimeSpan"/> custom format strings,
+    ''' otherwise <see cref="TimeSpan.ToString(String)"/> throws a <see cref="FormatException"/>.
+    ''' </summary>
+    Friend ReadOnly HttpClientTimeOutDisplay As String = AppGlobals.HttpClientTimeOut.ToString("mm\:ss", CultureInfo.InvariantCulture)
 
     ''' <summary>
     ''' The encoding used for console output, 

@@ -5,4 +5,7 @@
   <Project Path="Goodfon Wallpaper Scraper/Goodfon Wallpaper Scraper.vbproj" Id="19cab10d-3e85-42f6-bf7c-597f97ab06b5">
     <Platform Project="x64" />
   </Project>
+  <Project Path="Goodfon Wallpaper Scraper.Tests/Goodfon Wallpaper Scraper.Tests.vbproj">
+    <Platform Project="x64" />
+  </Project>
 </Solution>

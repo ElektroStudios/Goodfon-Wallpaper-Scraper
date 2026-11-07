@@ -771,7 +771,7 @@
         <div class="file-name">Accounts.json</div>
         <h3>User Accounts</h3>
         <p>
-          JSON file holding login credentials. Accounts are used to browse the uncensored catalog and download restricted content. Each account grants 100 extra daily downloads.
+          JSON file holding login credentials and login settings. Accounts are used to browse the uncensored catalog and download restricted content. Each account grants 100 extra daily downloads. If the website rejects a login with "Too many attempts. Please wait a few minutes", the program waits <code>RateLimitWaitSeconds</code> and retries, up to <code>MaxLoginAttempts</code> times.
         </p>
       </div>
     </div>
@@ -786,18 +786,28 @@ cyberpunk 2077</code></pre>
 
 <div class="code-block">
     <span class="code-label">Accounts.json — example</span>
-    <pre><code>[
-  {
-    <span class="keyword">"Username"</span>: <span class="value">"user123"</span>,
-    <span class="keyword">"Password"</span>: <span class="value">"pass123"</span>,
-    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    <pre><code>{
+  <span class="keyword">"LoginSettings"</span>: {
+    <span class="comment">// Wait before retrying a login rejected with "Too many attempts"</span>
+    <span class="keyword">"RateLimitWaitSeconds"</span>: <span class="value">180</span>,
+    <span class="comment">// Login attempts per account</span>
+    <span class="keyword">"MaxLoginAttempts"</span>: <span class="value">3</span>,
+    <span class="comment">// Pause between account logins</span>
+    <span class="keyword">"DelayBetweenLoginsSeconds"</span>: <span class="value">5</span>
   },
-  {
-    <span class="keyword">"Username"</span>: <span class="value">"user456"</span>,
-    <span class="keyword">"Password"</span>: <span class="value">"pass456"</span>,
-    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
-  }
-]</code></pre>
+  <span class="keyword">"Accounts"</span>: [
+    {
+      <span class="keyword">"Username"</span>: <span class="value">"user123"</span>,
+      <span class="keyword">"Password"</span>: <span class="value">"pass123"</span>,
+      <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    },
+    {
+      <span class="keyword">"Username"</span>: <span class="value">"user456"</span>,
+      <span class="keyword">"Password"</span>: <span class="value">"pass456"</span>,
+      <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    }
+  ]
+}</code></pre>
 </div>
 </div>
 
@@ -1021,7 +1031,7 @@ cyberpunk 2077</code></pre>
         <div class="file-name">Accounts.json</div>
         <h3>Cuentas de Usuario</h3>
         <p>
-          Archivo JSON con tus credenciales. Las cuentas se usan para ver el catálogo sin censura y descargar contenido restringido. Cada cuenta concede 100 descargas diarias adicionales.
+          Archivo JSON con tus credenciales y los ajustes de login. Las cuentas se usan para ver el catálogo sin censura y descargar contenido restringido. Cada cuenta concede 100 descargas diarias adicionales. Si la web rechaza un login con "Too many attempts. Please wait a few minutes", el programa espera <code>RateLimitWaitSeconds</code> segundos y reintenta, hasta <code>MaxLoginAttempts</code> veces.
         </p>
       </div>
     </div>
@@ -1036,18 +1046,28 @@ cyberpunk 2077</code></pre>
 
 <div class="code-block">
     <span class="code-label">Accounts.json — ejemplo</span>
-    <pre><code>[
-  {
-    <span class="keyword">"Username"</span>: <span class="value">"usuario123"</span>,
-    <span class="keyword">"Password"</span>: <span class="value">"clave123"</span>,
-    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    <pre><code>{
+  <span class="keyword">"LoginSettings"</span>: {
+    <span class="comment">// Espera antes de reintentar un login rechazado con "Too many attempts"</span>
+    <span class="keyword">"RateLimitWaitSeconds"</span>: <span class="value">180</span>,
+    <span class="comment">// Intentos de login por cuenta</span>
+    <span class="keyword">"MaxLoginAttempts"</span>: <span class="value">3</span>,
+    <span class="comment">// Pausa entre logins de cuentas</span>
+    <span class="keyword">"DelayBetweenLoginsSeconds"</span>: <span class="value">5</span>
   },
-  {
-    <span class="keyword">"Username"</span>: <span class="value">"usuario456"</span>,
-    <span class="keyword">"Password"</span>: <span class="value">"clave456"</span>,
-    <span class="keyword">"Enabled"</span>: <span class="value">true</span>
-  }
-]</code></pre>
+  <span class="keyword">"Accounts"</span>: [
+    {
+      <span class="keyword">"Username"</span>: <span class="value">"usuario123"</span>,
+      <span class="keyword">"Password"</span>: <span class="value">"clave123"</span>,
+      <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    },
+    {
+      <span class="keyword">"Username"</span>: <span class="value">"usuario456"</span>,
+      <span class="keyword">"Password"</span>: <span class="value">"clave456"</span>,
+      <span class="keyword">"Enabled"</span>: <span class="value">true</span>
+    }
+  ]
+}</code></pre>
 </div>
 </div>
 

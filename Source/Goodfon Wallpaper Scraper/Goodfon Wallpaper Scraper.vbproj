@@ -148,7 +148,11 @@
     <Compile Include="DevCase\UtilMouse.vb" />
     <Compile Include="DevCase\UtilNetwork.vb" />
     <Compile Include="auth\GoodFonAccountConfig.vb" />
+    <Compile Include="auth\GoodFonAccountPool.vb" />
+    <Compile Include="auth\GoodFonAccountsFile.vb" />
     <Compile Include="auth\GoodFonAuth.vb" />
+    <Compile Include="auth\GoodFonLoginSettings.vb" />
+    <Compile Include="auth\GoodFonRateLimitException.vb" />
     <Compile Include="DevCase\UtilSystemTray.vb" />
     <Compile Include="DevCase\UtilTaskBar.vb" />
     <Compile Include="DevCase\UtilUIAutomation.vb" />
@@ -157,7 +161,10 @@
     <Compile Include="DevCase\Win32\Win32LibNames.vb" />
     <Compile Include="DevCase\Win32\WindowMessages.vb" />
     <Compile Include="DevCase\Win32\WindowPlacement.vb" />
+    <Compile Include="Helpers\ConfigFileParser.vb" />
     <Compile Include="Helpers\FileSystemHelper.vb" />
+    <Compile Include="Helpers\GoodfonHtmlParser.vb" />
+    <Compile Include="Helpers\UrlHelper.vb" />
     <Compile Include="Program.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

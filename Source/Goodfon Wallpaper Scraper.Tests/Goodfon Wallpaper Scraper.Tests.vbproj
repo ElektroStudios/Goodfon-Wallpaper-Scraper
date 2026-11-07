@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>Goodfon Wallpaper Scraper.Tests</AssemblyName>
+    <RootNamespace>GoodfonWallpaperScraper.Tests</RootNamespace>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionStrict>On</OptionStrict>
+    <OptionInfer>Off</OptionInfer>
+    <OptionCompare>Binary</OptionCompare>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.5.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.5.2" />
+    <!-- Direct dependencies of the tested code (the main project uses packages.config, so they don't flow transitively). -->
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="System.Text.Json" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Goodfon Wallpaper Scraper\Goodfon Wallpaper Scraper.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The configuration files shipped with the application, to validate them. -->
+    <None Include="..\Goodfon Wallpaper Scraper\config\Search Terms.txt" Link="TestData\config\Search Terms.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Goodfon Wallpaper Scraper\config\Forbidden Keywords.txt" Link="TestData\config\Forbidden Keywords.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Goodfon Wallpaper Scraper\config\Accounts.json" Link="TestData\config\Accounts.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Import Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Import Include="System" />
+  </ItemGroup>
+
+</Project>

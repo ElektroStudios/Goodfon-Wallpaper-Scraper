@@ -4,15 +4,33 @@
   The account(s) will only be used to download wallpapers with insufficient rights.
 */
 
-[
-  {
-    "Enabled": false,
-    "Username": "Your username",
-    "Password": "Your password"
+{
+  "LoginSettings": {
+    // Seconds to wait before retrying a login rejected by the website with:
+    // "Too many attempts. Please wait a few minutes".
+    // If the website requests a longer wait time, the longer wait time is used.
+    "RateLimitWaitSeconds": 180,
+
+    // Maximum login attempts per account (the first attempt included).
+    "MaxLoginAttempts": 3,
+
+    // Seconds to wait between the logins of consecutive accounts.
+    "DelayBetweenLoginsSeconds": 35,
+
+    // Seconds to wait before retying after a network error.
+    "NetworkErrorWaitSeconds": 30
   },
-  {
-    "Enabled": false,
-    "Username": "Another username",
-    "Password": "Another password"
-  }
-]
+
+  "Accounts": [
+    {
+      "Enabled": false,
+      "Username": "Your username",
+      "Password": "Your password"
+    },
+    {
+      "Enabled": false,
+      "Username": "Another username",
+      "Password": "Another password"
+    }
+  ]
+}
