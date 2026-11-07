@@ -14,7 +14,7 @@
  - Fixed exit codes and HRESULT values being displayed in decimal with a "0x" prefix; they are now displayed in hexadecimal.
  - Fixed user-account login failing since the website introduced a login rate-limit ("Too many attempts. Please wait a few minutes"). The program now detects it and waits before retrying.
  - Added configurable login settings in the "Accounts.json" file: 'RateLimitWaitSeconds' (wait time before retrying a rate-limited login), 'MaxLoginAttempts' (attempts per account) and 'DelayBetweenLoginsSeconds' (pause between account logins). The legacy "Accounts.json" format (a plain list of accounts) is still supported, using default settings.
- - Login attempts that fail due to a network error (e.g., "The underlying connection was closed") or a timeout are now retried after a configurable wait time ('NetworkErrorWaitSeconds' in Accounts.json).
+ - Login attempts that fail due to a network error (e.g., "The underlying connection was closed") or a timeout are now retried after a configurable wait time ('NetworkErrorWaitSeconds' in Accounts.json). The console now shows the account index and the remaining accounts while logging-in.
  - Fixed free wallpapers not being downloaded anymore once the daily limit of 80 downloads per IP was reached and the Proton VPN server could not be rotated. The configured user-accounts are now used to keep downloading them (each account has its own daily download limit).
  - The Proton VPN rotation is no longer repeated for every wallpaper after a failure: it is retried every 5 minutes, and anonymous downloads are resumed as soon as it succeeds (saving the user-accounts' daily downloads).
  - Downloads performed with a user-account no longer count towards the daily download limit of the current IP.
