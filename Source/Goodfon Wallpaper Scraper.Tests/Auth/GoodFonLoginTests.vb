@@ -629,10 +629,10 @@ Public NotInheritable Class GoodFonLoginTests
 
         Dim settings As New GoodFonLoginSettings()
 
-        Assert.AreEqual(180, settings.RateLimitWaitSeconds)
-        Assert.AreEqual(3, settings.MaxLoginAttempts)
-        Assert.AreEqual(5, settings.DelayBetweenLoginsSeconds)
-        Assert.AreEqual(15, settings.NetworkErrorWaitSeconds)
+        Assert.AreEqual(GoodFonLoginSettings.DefaultRateLimitWaitSeconds, settings.RateLimitWaitSeconds)
+        Assert.AreEqual(GoodFonLoginSettings.DefaultMaxLoginAttempts, settings.MaxLoginAttempts)
+        Assert.AreEqual(GoodFonLoginSettings.DefaultDelayBetweenLoginsSeconds, settings.DelayBetweenLoginsSeconds)
+        Assert.AreEqual(GoodFonLoginSettings.DefaultNetworkErrorWaitSeconds, settings.NetworkErrorWaitSeconds)
         settings.Validate()
     End Sub
 

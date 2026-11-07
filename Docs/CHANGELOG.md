@@ -14,6 +14,14 @@
  - Fixed exit codes and HRESULT values being displayed in decimal with a "0x" prefix; they are now displayed in hexadecimal.
  - Fixed user-account login failing since the website introduced a login rate-limit ("Too many attempts. Please wait a few minutes"). The program now detects it and waits before retrying.
  - Added configurable login settings in the "Accounts.json" file: 'RateLimitWaitSeconds' (wait time before retrying a rate-limited login), 'MaxLoginAttempts' (attempts per account) and 'DelayBetweenLoginsSeconds' (pause between account logins). The legacy "Accounts.json" format (a plain list of accounts) is still supported, using default settings.
+ - Login attempts that fail due to a network error (e.g., "The underlying connection was closed") or a timeout are now retried after a configurable wait time ('NetworkErrorWaitSeconds' in Accounts.json).
+ - Fixed free wallpapers not being downloaded anymore once the daily limit of 80 downloads per IP was reached and the Proton VPN server could not be rotated. The configured user-accounts are now used to keep downloading them (each account has its own daily download limit).
+ - The Proton VPN rotation is no longer repeated for every wallpaper after a failure: it is retried every 5 minutes, and anonymous downloads are resumed as soon as it succeeds (saving the user-accounts' daily downloads).
+ - Downloads performed with a user-account no longer count towards the daily download limit of the current IP.
+ - Added a counter to the user-accounts login procedure (current account, remaining accounts and logged-in accounts), an estimated remaining time (ETA), and a message while waiting between logins.
+ - Added an estimated remaining time (ETA) for the current query (user profile, tag or search), based on the processing speed of the most recent pages.
+ - The GitHub repository URL is now displayed at startup, below the application title.
+ - Updated the console introduction, README, Accounts.json and manual (English and Spanish) to explain when the user-accounts are used.
  - Added a unit tests project (MSTest).
  - Refactored URL, HTML parsing, configuration parsing and user-account rotation logic into separate testable components.
 

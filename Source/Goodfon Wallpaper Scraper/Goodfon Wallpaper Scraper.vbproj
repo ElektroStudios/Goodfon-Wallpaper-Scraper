@@ -131,7 +131,9 @@
     <Compile Include="DevCase\Win32\Win32LibNames.vb" />
     <Compile Include="DevCase\Win32\WindowMessages.vb" />
     <Compile Include="DevCase\Win32\WindowPlacement.vb" />
+    <Compile Include="Helpers\AnonymousIpState.vb" />
     <Compile Include="Helpers\ConfigFileParser.vb" />
+    <Compile Include="Helpers\EtaEstimator.vb" />
     <Compile Include="Helpers\FileSystemHelper.vb" />
     <Compile Include="Helpers\GoodfonHtmlParser.vb" />
     <Compile Include="Helpers\UrlHelper.vb" />

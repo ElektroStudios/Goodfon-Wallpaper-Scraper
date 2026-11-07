@@ -720,7 +720,7 @@
         <div class="step-body">
           <div class="step-title">Add Goodfon accounts (optional but recommended)</div>
           <div class="step-desc">
-            Edit <code>Accounts.json</code> to include registered Goodfon accounts. These are strictly used when the scraper hits a <code>403 Forbidden</code> barrier (mature/restricted content).
+            Edit <code>Accounts.json</code> to include registered Goodfon accounts. They are used in two situations: to download the wallpapers that require a login (<code>403 Forbidden</code>, mature/restricted content), and to keep downloading the free wallpapers when the daily download limit of your IP is reached and the VPN server cannot be rotated.
           </div>
         </div>
       </div>
@@ -771,7 +771,7 @@
         <div class="file-name">Accounts.json</div>
         <h3>User Accounts</h3>
         <p>
-          JSON file holding login credentials and login settings. Accounts are used to browse the uncensored catalog and download restricted content. Each account grants 100 extra daily downloads. If the website rejects a login with "Too many attempts. Please wait a few minutes", the program waits <code>RateLimitWaitSeconds</code> and retries, up to <code>MaxLoginAttempts</code> times.
+          JSON file holding login credentials and login settings. Accounts are used to browse the uncensored catalog and download restricted content. Each account grants 100 extra daily downloads. The accounts are also used to download the free wallpapers when the daily limit of 80 downloads per IP is reached and the Proton VPN server cannot be rotated (for example, if the Proton VPN client is not running or fails to change the server); while this happens, the program retries the VPN rotation every 5 minutes and goes back to anonymous downloads as soon as it succeeds, to save the accounts' daily downloads. If the website rejects a login with "Too many attempts. Please wait a few minutes", the program waits <code>RateLimitWaitSeconds</code> and retries, up to <code>MaxLoginAttempts</code> times.
         </p>
       </div>
     </div>
@@ -980,7 +980,7 @@ cyberpunk 2077</code></pre>
         <div class="step-body">
           <div class="step-title">Añade cuentas de Goodfon (recomendado)</div>
           <div class="step-desc">
-            Edita <code>Accounts.json</code> para incluir tus cuentas registradas de Goodfon. Solo se utilizarán para descargar contenido restringido (error 403 Forbidden).
+            Edita <code>Accounts.json</code> para incluir tus cuentas registradas de Goodfon. Se utilizan en dos situaciones: para descargar los fondos que requieren iniciar sesión (error <code>403 Forbidden</code>, contenido restringido) y para seguir descargando los fondos gratuitos cuando se alcanza el límite diario de descargas de tu IP y no se puede rotar el servidor VPN.
           </div>
         </div>
       </div>
@@ -1031,7 +1031,7 @@ cyberpunk 2077</code></pre>
         <div class="file-name">Accounts.json</div>
         <h3>Cuentas de Usuario</h3>
         <p>
-          Archivo JSON con tus credenciales y los ajustes de login. Las cuentas se usan para ver el catálogo sin censura y descargar contenido restringido. Cada cuenta concede 100 descargas diarias adicionales. Si la web rechaza un login con "Too many attempts. Please wait a few minutes", el programa espera <code>RateLimitWaitSeconds</code> segundos y reintenta, hasta <code>MaxLoginAttempts</code> veces.
+          Archivo JSON con tus credenciales y los ajustes de login. Las cuentas se usan para ver el catálogo sin censura y descargar contenido restringido. Cada cuenta concede 100 descargas diarias adicionales. Las cuentas también se usan para descargar los fondos gratuitos cuando se alcanza el límite diario de 80 descargas por IP y no se puede rotar el servidor de Proton VPN (por ejemplo, si el cliente de Proton VPN no está abierto o falla al cambiar de servidor); mientras tanto, el programa reintenta la rotación de la VPN cada 5 minutos y, en cuanto lo consigue, vuelve a las descargas anónimas para ahorrar las descargas diarias de las cuentas. Si la web rechaza un login con "Too many attempts. Please wait a few minutes", el programa espera <code>RateLimitWaitSeconds</code> segundos y reintenta, hasta <code>MaxLoginAttempts</code> veces.
         </p>
       </div>
     </div>

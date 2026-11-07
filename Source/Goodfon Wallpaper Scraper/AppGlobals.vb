@@ -28,6 +28,11 @@ Friend Module AppGlobals
         $"{My.Application.Info.Title} v{My.Application.Info.Version.ToString(fieldCount:=3)} - by ElektroStudios"
 
     ''' <summary>
+    ''' The URL of the application source code repository on GitHub.
+    ''' </summary>
+    Friend Const RepositoryUrl As String = "https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper"
+
+    ''' <summary>
     ''' The file path where to save the downloads history.
     ''' </summary>
     Friend ReadOnly HistoryFilePath As String =

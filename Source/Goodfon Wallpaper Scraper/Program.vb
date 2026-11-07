@@ -114,6 +114,18 @@ Public Module Program
     Private accountsFile As GoodFonAccountsFile
 
     ''' <summary>
+    ''' Tracks whether the anonymous daily download limit has been reached on the current IP address, 
+    ''' and the result of the VPN server rotations.
+    ''' </summary>
+    Private ReadOnly anonymousIp As New AnonymousIpState()
+
+    ''' <summary>
+    ''' Atomic flag: 1 = the "downloading free wallpapers with user-accounts" notice was already shown 
+    ''' for the current IP address, 0 = not shown yet.
+    ''' </summary>
+    Private accountFallbackNoticeShown As Integer = 0
+
+    ''' <summary>
     ''' The encoding used for console output, 
     ''' and reading and writing to text files.
     ''' <para></para>
@@ -146,6 +158,7 @@ Public Module Program
         Console.Title = AppGlobals.AppTitleAndVersion
 #End If
         Program.WriteColoredLine(" " & AppGlobals.AppTitleAndVersion, ConsoleColor.Cyan)
+        Program.WriteColoredLine(" " & AppGlobals.RepositoryUrl, ConsoleColor.DarkCyan)
         Console.WriteLine("╭──────────────────────────────────────────────────────────────────────────────────╮")
         Console.WriteLine("│ Purpose:                                                                         │")
         Console.WriteLine("│   This program automates the process of downloading wallpapers from Goodfon.com  │")
@@ -159,10 +172,13 @@ Public Module Program
         Console.WriteLine("│                                                                                  │")
         Console.WriteLine("│     - <PROGRAM DIRECTORY>\Output\                                                │")
         Console.WriteLine("│                                                                                  │")
-        Console.WriteLine("│   A GoodFon account can also be configured in the following file:                │")
+        Console.WriteLine("│   GoodFon user-accounts can also be configured in the following file:            │")
         Console.WriteLine("│     - <PROGRAM DIRECTORY>\Config\Accounts.json                                   │")
         Console.WriteLine("│                                                                                  │")
-        Console.WriteLine("│   The account will only be used to download wallpapers with insufficient rights. │")
+        Console.WriteLine("│   The user-accounts are used to download the wallpapers that require a login.    │")
+        Console.WriteLine("│   They are also used to keep downloading the free wallpapers when the daily      │")
+        Console.WriteLine("│   download limit of the current IP is reached and the VPN server cannot be       │")
+        Console.WriteLine("│   rotated (each account has its own daily download limit).                       │")
         Console.WriteLine("│                                                                                  │")
         Console.WriteLine("│ Requeriments:                                                                    │")
         Console.WriteLine("│   Since Goodfon.com has a hard daily limit of 80 maximum downloads per IP,       │")
@@ -225,6 +241,12 @@ Public Module Program
                 Dim authsList As New List(Of GoodFonAuth)
                 Dim isFirstLogin As Boolean = True
 
+                ' Used to estimate the remaining time of the login procedure:
+                ' (pending logins x average login duration) + (pending delays x delay between logins).
+                Dim pendingEnabledAccounts As Integer = Program.accountsFile.Accounts.Where(Function(account As GoodFonAccountConfig) account.Enabled).Count()
+                Dim loginDurationsSum As TimeSpan = TimeSpan.Zero
+                Dim completedLogins As Integer = 0
+                Dim loginWatch As New Stopwatch()
 
                 Dim accountsCount As Integer = Program.accountsFile.Accounts.Count
                 For accountIndex As Integer = 0 To accountsCount - 1
@@ -232,7 +254,15 @@ Public Module Program
                     Dim accountConfig As GoodFonAccountConfig = Program.accountsFile.Accounts(accountIndex)
                     Dim remainingAccounts As Integer = accountsCount - accountIndex - 1
 
-                    Program.WriteColoredLine($"  [Account {accountIndex + 1:N0} of {accountsCount:N0}] ({remainingAccounts:N0} remaining, {authsList.Count:N0} logged-in so far)", ConsoleColor.Cyan)
+                    Dim etaText As String = String.Empty
+                    If accountConfig.Enabled Then
+                        Dim pendingDelays As Integer = If(isFirstLogin, pendingEnabledAccounts - 1, pendingEnabledAccounts)
+                        Dim averageLogin As TimeSpan = If(completedLogins = 0, TimeSpan.Zero, TimeSpan.FromTicks(loginDurationsSum.Ticks \ completedLogins))
+                        Dim loginEta As TimeSpan = TimeSpan.FromTicks(averageLogin.Ticks * pendingEnabledAccounts) +
+                                                   TimeSpan.FromSeconds(CDbl(loginSettings.DelayBetweenLoginsSeconds) * Math.Max(0, pendingDelays))
+                        etaText = $" [ETA: {EtaEstimator.FormatDuration(loginEta)}]"
+                    End If
+                    Program.WriteColoredLine($"  [Account {accountIndex + 1:N0} of {accountsCount:N0}] ({remainingAccounts:N0} remaining, {authsList.Count:N0} logged-in so far){etaText}", ConsoleColor.Cyan)
 #If DEBUG Then
                     Program.WriteColoredLine($"  - Username: {accountConfig.Username}", ConsoleColor.White)
                     Program.WriteColoredLine($"  - Password: {accountConfig.Password}", ConsoleColor.White)
@@ -245,9 +275,12 @@ Public Module Program
 
                         ' Pause between consecutive logins to reduce the chance of triggering the website login rate-limit.
                         If Not isFirstLogin AndAlso loginSettings.DelayBetweenLoginsSeconds > 0 Then
+                            Dim loginAt As Date = Date.Now.AddSeconds(loginSettings.DelayBetweenLoginsSeconds)
+                            Program.WriteColoredLine($"  Waiting {loginSettings.DelayBetweenLoginsSeconds:N0} seconds before attempting to log in (at {loginAt:HH:mm:ss})...", ConsoleColor.DarkGray)
                             Thread.Sleep(TimeSpan.FromSeconds(loginSettings.DelayBetweenLoginsSeconds))
                         End If
                         isFirstLogin = False
+                        loginWatch.Restart()
 
                         Dim auth As New GoodFonAuth()
                         Try
@@ -274,6 +307,10 @@ Public Module Program
                             Program.WriteColoredLine($"  Login error: {Program.GetInnermostMessage(ex)}", ConsoleColor.Red)
 
                         End Try
+
+                        loginDurationsSum += loginWatch.Elapsed
+                        completedLogins += 1
+                        pendingEnabledAccounts -= 1
                     Else
                         Program.WriteColoredLine($"  Account is disabled.", ConsoleColor.Yellow)
 
@@ -405,13 +442,23 @@ Public Module Program
         Program.WriteColoredLine($"Found {lastPageNumber:N0} pages (total {totalWallpapers:N0} wallpapers)", ConsoleColor.DarkCyan)
         Console.WriteLine()
 
+        ' Estimates the remaining time of the current query, based on the duration of the most recent pages.
+        Dim pagesEta As New EtaEstimator()
+        pagesEta.StartItem()
+
         ' ── Outer sequential page loop ─────────────────────────────────────────
         For page As Integer = 1 To lastPageNumber
+
+            ' Record the duration of the previous page (whatever the way it ended), then start timing this page.
+            If page > 1 Then
+                pagesEta.CompleteItem()
+            End If
 
             Program.PageTimeoutWatch.Restart()
 
             Dim pageUrl As String = UrlHelper.BuildPageUrl(baseUrl, page)
 
+            Program.WriteColoredLine($"[ETA: {pagesEta.GetEtaText(lastPageNumber - page + 1)}]", ConsoleColor.DarkCyan)
             Program.WriteColoredLine($"[Page {page:N0} of {lastPageNumber:N0}]: {UrlHelper.ToDisplayUrl(pageUrl)}", ConsoleColor.White)
 
             Dim pageResp As HttpResponseMessage = Nothing
@@ -506,6 +553,11 @@ Public Module Program
             Dim currentIpUsage As Integer = Thread.VolatileRead(Program.downloadsOnCurrentIp)
             If (currentIpUsage + totalItems) > AppGlobals.MaxDownloadsPerIp AndAlso Program.accountPool.GetAvailable() Is Nothing Then
                 Await Program.RotateVpnServerAsync($"{currentIpUsage} downloads on current IP plus {totalItems} items on next page (total projected: {currentIpUsage + totalItems:N0}) would exceed the daily limit of {AppGlobals.MaxDownloadsPerIp} daily downloads per IP")
+
+            ElseIf Program.anonymousIp.IsLimitReached AndAlso Program.anonymousIp.CanAttemptRotation() Then
+                ' Free wallpapers are being downloaded with user-accounts because a previous VPN rotation failed.
+                ' Periodically retry the rotation to resume anonymous downloads and save the user-accounts daily downloads.
+                Await Program.RotateVpnServerAsync($"Retrying to resume anonymous downloads; the daily {AppGlobals.MaxDownloadsPerIp} download limit was reached on the current IP")
             End If
 
             ' ── Inner parallel section: up to 24 concurrent wallpaper tasks ───────
@@ -559,7 +611,14 @@ Public Module Program
                                 Dim downloadSuccess As TriState = TriState.False
                                 Dim downloadEx As Exception = Nothing
                                 Try
-                                    downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(client, capturedUrl, saveFolder, capturedItem, capturedTotal, Nothing)
+                                    ' While the anonymous daily limit is reached on the current IP (and the VPN server could not be rotated),
+                                    ' download the free wallpapers directly with an available user-account.
+                                    Dim fallbackAuth As GoodFonAuth = If(Program.anonymousIp.IsLimitReached, Program.accountPool.GetAvailable(), Nothing)
+                                    If fallbackAuth IsNot Nothing Then
+                                        downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(fallbackAuth.Client, capturedUrl, saveFolder, capturedItem, capturedTotal, fallbackAuth)
+                                    Else
+                                        downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(client, capturedUrl, saveFolder, capturedItem, capturedTotal, Nothing)
+                                    End If
                                 Catch ex As Exception
                                     downloadEx = ex
                                 End Try
@@ -768,16 +827,24 @@ Public Module Program
             If currentAuth IsNot Nothing Then
                 Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Download limit reached for today with user-account {Program.accountPool.GetPosition(currentAuth):N0}/{Program.accountPool.Count:N0}.", ConsoleColor.Red)
                 Program.accountPool.MarkLimitReached(currentAuth)
+
             Else
                 Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Download limit reached for today.", ConsoleColor.Red)
+                Program.anonymousIp.ReportLimitReached()
+
+                Await Program.RotateVpnServerAsync($"Daily {AppGlobals.MaxDownloadsPerIp} download limit reached on the current IP")
+
+                ' If the VPN server could not be rotated, keep downloading the free wallpaper using an available user-account.
+                If Program.anonymousIp.IsLimitReached Then
+                    Dim authToUse As GoodFonAuth = Program.accountPool.GetAvailable()
+                    If authToUse IsNot Nothing Then
+                        Program.ShowAccountFallbackNotice()
+                        Return Await Program.DownloadOriginalWallpaperAsync(authToUse.Client, wallpaperPageUrl, saveFolder, capturedItem, capturedTotal, authToUse)
+                    End If
+                End If
             End If
 
             Interlocked.Increment(Program.totalFailedWallpaperCount)
-
-            If currentAuth Is Nothing Then
-                Await Program.RotateVpnServerAsync($"Daily {AppGlobals.MaxDownloadsPerIp} download limit reached on the current IP")
-            End If
-
             Return TriState.False
         End If
         ' ──────────────────────────────────────────────────────────────────────────
@@ -888,7 +955,10 @@ Public Module Program
 
                 File.WriteAllBytes(extendedSavePath, imageBytes)
                 Interlocked.Increment(Program.totalSavedWallpaperCount)
-                Interlocked.Increment(Program.downloadsOnCurrentIp)
+                ' Only anonymous downloads count towards the daily download limit of the current IP.
+                If currentAuth Is Nothing Then
+                    Interlocked.Increment(Program.downloadsOnCurrentIp)
+                End If
             Catch ex As Exception
                 Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Failed to write to disk imgae file {savePath}: {ex.Message}", ConsoleColor.Red)
                 Interlocked.Increment(Program.totalFailedWallpaperCount)
@@ -949,9 +1019,21 @@ Public Module Program
     ''' Fires ChangeServerInProtonVpnClient exactly once per rotation cycle.
     ''' If a rotation is already in progress every concurrent caller returns
     ''' immediately without queuing — no serialised pile-up of waiting threads.
+    ''' <para></para>
+    ''' After a failed rotation, new rotations are not attempted until 
+    ''' <see cref="AnonymousIpState.RotationRetryInterval"/> has elapsed, 
+    ''' so a failing (and slow) rotation is not repeated for every wallpaper or page.
     ''' </summary>
+    ''' 
+    ''' <param name="reason">
+    ''' The reason of the rotation, displayed in the console.
+    ''' </param>
     <DebuggerStepThrough>
     Private Async Function RotateVpnServerAsync(reason As String) As Task
+
+        If Not Program.anonymousIp.CanAttemptRotation() Then
+            Return
+        End If
 
         ' Only the thread that atomically flips 0→1 gets to run the rotation.
         ' Every other concurrent caller sees 1 already set and bails out.
@@ -964,11 +1046,15 @@ Public Module Program
             UtilNetwork.ChangeServerInProtonVpnClient()
             Await Task.Delay(1000)
             Interlocked.Exchange(Program.downloadsOnCurrentIp, 0)
+            Program.anonymousIp.ReportRotationSucceeded()
+            Interlocked.Exchange(Program.accountFallbackNoticeShown, 0)
             Program.WriteColoredLine("Proton VPN rotation done.", ConsoleColor.Magenta)
 
         Catch ex As Exception
+            Program.anonymousIp.ReportRotationFailed()
             Dim errMsg As String = If(ex.InnerException IsNot Nothing, ex.InnerException.Message, ex.Message)
             Program.WriteColoredLine($"  Proton VPN rotation error: {errMsg}", ConsoleColor.Red)
+            Program.WriteColoredLine($"  The next VPN rotation will not be attempted until {Date.Now + Program.anonymousIp.RotationRetryInterval:HH:mm:ss}.", ConsoleColor.Red)
 
         Finally
             ' Reset flag so future rotations are possible again.
@@ -1168,6 +1254,18 @@ Public Module Program
         Console.ReadKey(intercept:=True)
 #End If
         Environment.Exit(exitCode)
+    End Sub
+
+    ''' <summary>
+    ''' Shows, once per IP address, a notice that the free wallpapers are being downloaded using the user-accounts 
+    ''' because the anonymous daily download limit was reached and the VPN server could not be rotated.
+    ''' </summary>
+    <DebuggerStepThrough>
+    Private Sub ShowAccountFallbackNotice()
+
+        If Interlocked.CompareExchange(Program.accountFallbackNoticeShown, 1, 0) = 0 Then
+            Program.WriteColoredLine($"[Auth] The daily {AppGlobals.MaxDownloadsPerIp} download limit was reached on the current IP and the VPN server could not be rotated. Free wallpapers will be downloaded using the user-accounts.", ConsoleColor.Yellow)
+        End If
     End Sub
 
 #End Region

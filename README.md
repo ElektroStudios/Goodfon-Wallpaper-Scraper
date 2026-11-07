@@ -115,11 +115,12 @@ Also, you can read a manual in HTML format by clicking [here](https://htmlprevie
 
 * **Bulk Account Creation:** You can use temporary mail services like [temp-mail.org](https://temp-mail.org/) to quickly register multiple user accounts on Goodfon in just a few minutes. 
 * **Maximize Restricted Pulls:** Since every registered account grants you an individual allocation of 100 daily downloads for mature/restricted content, adding a batch of configured credentials to your `Accounts.json` file ensures a massive threshold of restricted assets can be downloaded concurrently during a single session.
+* **Keep Downloading When the VPN Can't Rotate:** The configured accounts are not only used for restricted content. When the daily limit of 80 downloads per IP is reached and the Proton VPN server cannot be rotated, the program keeps downloading the free wallpapers using the accounts (each one with its own daily limit), and periodically retries the VPN rotation to go back to anonymous downloads.
 
 ## ⚠️ Limitations
 
 * **Proton VPN Client Dependency:** While the program can technically interface with the free tier of the Proton VPN client for Windows, doing so is highly unstable. The free version imposes severe multi-minute cooldown penalties for server switching, which forces the scraper to halt or time out during a rotation cycle. For an uninterrupted automated experience capable of pulling tens of thousands of wallpapers in a matter of hours, **a paid Proton VPN plan is heavily recommended**.
-* **Hard Single-Session Cap:** Without any running instance of Proton VPN, the scraper is strictly limited by the web-server's native restrictions: 80 daily downloads for guest IPs, or 100 downloads if a registered Goodfon account is provided.
+* **Hard Single-Session Cap:** Without any running instance of Proton VPN, the scraper is strictly limited by the web-server's native restrictions: 80 daily downloads for guest IPs, plus 100 daily downloads for each registered Goodfon account provided.
 
 ## 🔄 Change Log
 

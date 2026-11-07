@@ -53,6 +53,18 @@ Public NotInheritable Class AppGlobalsTests
     End Sub
 
     ''' <summary>
+    ''' Verifies the GitHub repository URL shown at startup.
+    ''' </summary>
+    <TestMethod>
+    Public Sub RepositoryUrl_IsTheGitHubRepository()
+
+        Dim repositoryUrl As String = AppGlobals.RepositoryUrl
+
+        Assert.AreEqual("https://github.com/ElektroStudios/Goodfon-Wallpaper-Scraper", repositoryUrl)
+        Assert.IsTrue(Uri.IsWellFormedUriString(repositoryUrl, UriKind.Absolute))
+    End Sub
+
+    ''' <summary>
     ''' Verifies that the HTTP Referrer is the website root.
     ''' </summary>
     <TestMethod>

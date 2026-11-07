@@ -1,7 +1,9 @@
 ﻿/*
   User Credentials Configuration List for Goodfon.com website.
   To activate an account, change the 'Enabled' property to true.
-  The account(s) will only be used to download wallpapers with insufficient rights.
+  The accounts are used to download the wallpapers that require a login, and also to keep
+  downloading the free wallpapers when the daily download limit of the current IP is reached
+  and the VPN server cannot be rotated (each account has its own daily download limit).
 */
 
 {
