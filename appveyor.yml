@@ -37,7 +37,7 @@ build_script:
   - msbuild "Source\%APP_DIR_NAME%.%SOLUTION_EXT%" /p:Configuration=%configuration% /maxcpucount
 
 test_script:
-  - dotnet test "Source\%APP_DIR_NAME%.Tests" -c %configuration% --no-build
+  - dotnet test "Source\Goodfon Wallpaper Scraper.Tests\Goodfon Wallpaper Scraper.Tests.vbproj" -c Release
   
 after_build:
   - >-
