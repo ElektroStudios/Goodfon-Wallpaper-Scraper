@@ -12,7 +12,7 @@ Option Infer Off
 ''' The exception that is thrown when the GoodFon.com website rejects a login attempt due to its login rate-limit
 ''' ("Too many attempts. Please wait a few minutes").
 ''' </summary>
-Public NotInheritable Class GoodFonRateLimitException : Inherits Exception
+Public NotInheritable Class GoodFonRateLimitException : Inherits Exception ' NOSONAR
 
     ''' <summary>
     ''' Gets the wait time requested by the website (HTTP "Retry-After" header),

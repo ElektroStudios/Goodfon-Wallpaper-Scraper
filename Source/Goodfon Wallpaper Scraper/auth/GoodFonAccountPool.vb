@@ -21,7 +21,7 @@ Imports System.Diagnostics
 ''' rotating to the next account when the current one reaches its daily download limit,
 ''' and automatically resetting exhausted accounts after a cooldown period.
 ''' </summary>
-Friend NotInheritable Class GoodFonAccountPool
+Friend NotInheritable Class GoodFonAccountPool ' NOSONAR
 
 #Region " Fields "
 

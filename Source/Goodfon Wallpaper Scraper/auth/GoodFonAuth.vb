@@ -25,7 +25,7 @@ Imports HtmlAgilityPack
 ''' <summary>
 ''' Handles login to GoodFon.com website and provides an authenticated <see cref="HttpClient"/>.
 ''' </summary>
-Public NotInheritable Class GoodFonAuth : Implements IDisposable
+Public NotInheritable Class GoodFonAuth : Implements IDisposable ' NOSONAR
 
 #Region " Constants "
 

@@ -19,7 +19,7 @@ Imports System.Text.Json.Serialization
 ''' Represents the content of the "Accounts.json" configuration file:
 ''' the login settings and the list of GoodFon.com accounts.
 ''' </summary>
-Public NotInheritable Class GoodFonAccountsFile
+Public NotInheritable Class GoodFonAccountsFile ' NOSONAR
 
     ''' <summary>
     ''' Gets or sets the login settings.

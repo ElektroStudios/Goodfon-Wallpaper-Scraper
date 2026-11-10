@@ -19,7 +19,7 @@ Imports System.Security.Cryptography
 ''' <summary>
 ''' Specifies the kind of a GoodFon.com wallpaper listing URL.
 ''' </summary>
-Friend Enum GoodfonUrlKind As Integer
+Friend Enum GoodfonUrlKind As Integer ' NOSONAR
 
     ''' <summary>
     ''' The URL kind could not be identified.

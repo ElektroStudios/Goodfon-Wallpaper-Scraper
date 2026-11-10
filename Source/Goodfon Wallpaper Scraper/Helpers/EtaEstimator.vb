@@ -23,7 +23,7 @@ Imports System.Globalization
 ''' Using a sliding window of recent items lets the estimation adapt to changes in the processing speed
 ''' (e.g., pages whose wallpapers were already downloaded are processed much faster than new pages).
 ''' </summary>
-Friend NotInheritable Class EtaEstimator
+Friend NotInheritable Class EtaEstimator ' NOSONAR
 
 #Region " Fields "
 

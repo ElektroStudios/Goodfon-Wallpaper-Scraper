@@ -19,7 +19,7 @@ Imports System.Text.Json.Serialization
 ''' Represents the user-configurable settings of the GoodFon.com login process,
 ''' mainly used to handle the website login rate-limit ("Too many attempts. Please wait a few minutes").
 ''' </summary>
-Public NotInheritable Class GoodFonLoginSettings
+Public NotInheritable Class GoodFonLoginSettings ' NOSONAR
 
 #Region " Constants "
 

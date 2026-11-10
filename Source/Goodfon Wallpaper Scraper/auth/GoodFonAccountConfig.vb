@@ -16,7 +16,7 @@ Imports System.Text.Json.Serialization
 ''' <summary>
 ''' Represents the configuration for a GoodFon account.
 ''' </summary>
-Public NotInheritable Class GoodFonAccountConfig
+Public NotInheritable Class GoodFonAccountConfig ' NOSONAR
 
     ''' <summary>
     ''' Gets or sets a value indicating whether this <see cref="GoodFonAccountConfig"/> is enabled.

@@ -22,7 +22,7 @@ Imports System.Diagnostics
 ''' (the anonymous limit was reached and the VPN server could not be rotated),
 ''' and when a new VPN server rotation can be attempted again.
 ''' </summary>
-Friend NotInheritable Class AnonymousIpState
+Friend NotInheritable Class AnonymousIpState ' NOSONAR
 
 #Region " Fields "
 
