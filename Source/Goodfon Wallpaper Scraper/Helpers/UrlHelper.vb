@@ -10,6 +10,7 @@ Option Infer Off
 
 Imports System.Collections.Generic
 Imports System.Diagnostics
+Imports System.Diagnostics.CodeAnalysis
 Imports System.Security.Cryptography
 
 #End Region
@@ -106,6 +107,8 @@ Friend Module UrlHelper
     ''' Thrown when <paramref name="url"/> is <see langword="Nothing"/>.
     ''' </exception>
     <DebuggerStepThrough>
+    <SuppressMessage("Security", "S4790:Using weak hashing algorithms is security-sensitive",
+      Justification:="MD5 is used as a non-cryptographic identifier for the downloads history file.")>
     Friend Function GenerateMD5FromUrl(url As String) As String
 
         Dim relativeUrl As String = UrlHelper.GetRelativeUrl(url)
