@@ -120,8 +120,7 @@ Public Module Program
     Private ReadOnly anonymousIp As New AnonymousIpState()
 
     ''' <summary>
-    ''' Atomic flag: 1 = the "downloading free wallpapers with user-accounts" notice was already shown 
-    ''' for the current IP address, 0 = not shown yet.
+    ''' Last reported fallback status: 0 = none, 1 = available, 2 = unavailable.
     ''' </summary>
     Private accountFallbackNoticeShown As Integer = 0
 
@@ -611,14 +610,7 @@ Public Module Program
                                 Dim downloadSuccess As TriState = TriState.False
                                 Dim downloadEx As Exception = Nothing
                                 Try
-                                    ' While the anonymous daily limit is reached on the current IP (and the VPN server could not be rotated),
-                                    ' download the free wallpapers directly with an available user-account.
-                                    Dim fallbackAuth As GoodFonAuth = If(Program.anonymousIp.IsLimitReached, Program.accountPool.GetAvailable(), Nothing)
-                                    If fallbackAuth IsNot Nothing Then
-                                        downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(fallbackAuth.Client, capturedUrl, saveFolder, capturedItem, capturedTotal, fallbackAuth)
-                                    Else
-                                        downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(client, capturedUrl, saveFolder, capturedItem, capturedTotal, Nothing)
-                                    End If
+                                    downloadSuccess = Await Program.DownloadOriginalWallpaperAsync(client, capturedUrl, saveFolder, capturedItem, capturedTotal, Nothing).ConfigureAwait(False)
                                 Catch ex As Exception
                                     downloadEx = ex
                                 End Try
@@ -683,6 +675,16 @@ Public Module Program
                                                           capturedItem As Integer,
                                                           capturedTotal As Integer,
                                                           currentAuth As GoodFonAuth) As Task(Of TriState)
+
+        ' Apply fallback at the download entry point, including calls already queued when the IP was exhausted.
+        If currentAuth Is Nothing AndAlso Program.anonymousIp.IsLimitReached Then
+            currentAuth = Program.GetFallbackAccount()
+            If currentAuth Is Nothing Then
+                Interlocked.Increment(Program.totalFailedWallpaperCount)
+                Return TriState.False
+            End If
+            client = currentAuth.Client
+        End If
 
         Dim originalUrl As String = wallpaperPageUrl
         Dim doc As HtmlDocument
@@ -828,6 +830,12 @@ Public Module Program
                 Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Download limit reached for today with user-account {Program.accountPool.GetPosition(currentAuth):N0}/{Program.accountPool.Count:N0}.", ConsoleColor.Red)
                 Program.accountPool.MarkLimitReached(currentAuth)
 
+                ' Retry this wallpaper instead of losing it when the active account becomes exhausted.
+                Dim nextAuth As GoodFonAuth = Program.GetFallbackAccount()
+                If nextAuth IsNot Nothing Then
+                    Return Await Program.DownloadOriginalWallpaperAsync(nextAuth.Client, wallpaperPageUrl, saveFolder, capturedItem, capturedTotal, nextAuth).ConfigureAwait(False)
+                End If
+
             Else
                 Program.WriteColoredLine($"[Wall {capturedItem:D2}/{capturedTotal:D2}] [Downloaded: {Program.totalSavedWallpaperCount:N0}] Download limit reached for today.", ConsoleColor.Red)
                 Program.anonymousIp.ReportLimitReached()
@@ -836,10 +844,9 @@ Public Module Program
 
                 ' If the VPN server could not be rotated, keep downloading the free wallpaper using an available user-account.
                 If Program.anonymousIp.IsLimitReached Then
-                    Dim authToUse As GoodFonAuth = Program.accountPool.GetAvailable()
+                    Dim authToUse As GoodFonAuth = Program.GetFallbackAccount()
                     If authToUse IsNot Nothing Then
-                        Program.ShowAccountFallbackNotice()
-                        Return Await Program.DownloadOriginalWallpaperAsync(authToUse.Client, wallpaperPageUrl, saveFolder, capturedItem, capturedTotal, authToUse)
+                        Return Await Program.DownloadOriginalWallpaperAsync(authToUse.Client, wallpaperPageUrl, saveFolder, capturedItem, capturedTotal, authToUse).ConfigureAwait(False)
                     End If
                 End If
             End If
@@ -1042,6 +1049,11 @@ Public Module Program
         End If
 
         Try
+            ' Another caller may have failed a rotation between our first check and acquiring the flag.
+            If Not Program.anonymousIp.CanAttemptRotation() Then
+                Return
+            End If
+
             Program.WriteColoredLine($"Proton VPN rotation triggered ({reason})...", ConsoleColor.Magenta)
             UtilNetwork.ChangeServerInProtonVpnClient()
             Await Task.Delay(1000)
@@ -1257,13 +1269,44 @@ Public Module Program
     End Sub
 
     ''' <summary>
+    ''' Gets an available account and reports why account fallback is unavailable when none can be used.
+    ''' </summary>
+    ''' <returns>An available logged-in account, or <see langword="Nothing"/>.</returns>
+    Private Function GetFallbackAccount() As GoodFonAuth
+
+        Dim auth As GoodFonAuth = Program.accountPool.GetAvailable()
+        If auth IsNot Nothing Then
+            If Program.anonymousIp.IsLimitReached Then
+                Program.ShowAccountFallbackNotice()
+            End If
+            Return auth
+        End If
+
+        If Interlocked.Exchange(Program.accountFallbackNoticeShown, 2) <> 2 Then
+            Dim configured As Integer = If(Program.accountsFile Is Nothing, 0, Program.accountsFile.Accounts.Count)
+            Dim enabled As Integer = If(Program.accountsFile Is Nothing, 0,
+                Program.accountsFile.Accounts.Where(Function(account As GoodFonAccountConfig) account.Enabled).Count())
+            Dim reason As String
+            If Program.accountPool.Count > 0 Then
+                reason = "All logged-in accounts have reached their daily download limit."
+            ElseIf enabled > 0 Then
+                reason = "No enabled account logged in successfully. Check the login errors above."
+            Else
+                reason = "No accounts are enabled. Check Enabled in Accounts.json."
+            End If
+            Program.WriteColoredLine($"[Auth] Account fallback unavailable: {reason} Configured: {configured:N0}; enabled: {enabled:N0}; logged-in: {Program.accountPool.Count:N0}. Blocked anonymous downloads will not be retried while the IP limit remains active.", ConsoleColor.Yellow)
+        End If
+        Return Nothing
+    End Function
+
+    ''' <summary>
     ''' Shows, once per IP address, a notice that the free wallpapers are being downloaded using the user-accounts 
     ''' because the anonymous daily download limit was reached and the VPN server could not be rotated.
     ''' </summary>
     <DebuggerStepThrough>
     Private Sub ShowAccountFallbackNotice()
 
-        If Interlocked.CompareExchange(Program.accountFallbackNoticeShown, 1, 0) = 0 Then
+        If Interlocked.Exchange(Program.accountFallbackNoticeShown, 1) <> 1 Then
             Program.WriteColoredLine($"[Auth] The daily {AppGlobals.MaxDownloadsPerIp} download limit was reached on the current IP and the VPN server could not be rotated. Free wallpapers will be downloaded using the user-accounts.", ConsoleColor.Yellow)
         End If
     End Sub

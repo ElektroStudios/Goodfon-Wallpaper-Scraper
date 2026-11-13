@@ -1,6 +1,14 @@
 ﻿# Goodfon Wallpaper Scraper Change Log 📋
 
-## v1.0.2 **(current)** 🆕
+## v1.0.3 **(current)** 🆕
+ - Apply account fallback at the download entry point, including queued downloads after the anonymous IP limit is reached.
+ - Retry the same wallpaper with the next available account when the current account reaches its daily limit.
+ - Explain when account fallback is unavailable, distinguishing disabled accounts, failed logins and exhausted logged-in accounts, with configured/enabled/logged-in counts.
+ - Avoid further anonymous wallpaper requests while the IP is known to be exhausted and no account is available; page-level VPN recovery attempts retain their existing cooldown.
+ - Recheck the VPN retry cooldown after acquiring the rotation flag to prevent concurrent callers from repeating a failed rotation immediately.
+ - Add regression tests for the download fallback flow using simulated HTTP responses.
+
+## v1.0.2 🔁
  - Fixed a crash at the end of execution (NullReferenceException) when no user-account was configured, enabled or successfully logged-in.
  - Fixed a crash (NullReferenceException) when a page request failed with a non-timeout error, which aborted the whole execution with a fatal error.
  - Fixed timeout messages (login, page, wallpaper and image requests): they threw a FormatException instead of being displayed, due to an invalid "mm:ss" TimeSpan format.
