@@ -52,7 +52,7 @@ Friend Module ConfigFileParser
         Dim result As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
 
         For Each line As String In lines
-            If line Is Nothing Then
+            If String.IsNullOrWhiteSpace(line) Then
                 Continue For
             End If
 

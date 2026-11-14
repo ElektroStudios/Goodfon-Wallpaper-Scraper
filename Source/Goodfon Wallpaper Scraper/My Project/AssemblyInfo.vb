@@ -30,8 +30,8 @@ Imports System.Runtime.InteropServices
 '      Revision
 '
 
-<Assembly: AssemblyVersion("1.0.3.0")>
-<Assembly: AssemblyFileVersion("1.0.3.0")>
+<Assembly: AssemblyVersion("1.0.4.0")>
+<Assembly: AssemblyFileVersion("1.0.4.0")>
 <Assembly: NeutralResourcesLanguage("en")>
 
 <Assembly: InternalsVisibleTo("Goodfon Wallpaper Scraper.Tests")>

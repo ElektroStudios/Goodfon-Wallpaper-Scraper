@@ -1,5 +1,8 @@
 ﻿# Goodfon Wallpaper Scraper Change Log 📋
 
+## v1.0.4 **(current)** 🆕
+ - Added support for scraping direct category URLs (e.g., 'https://www.goodfon.com/girls/' and 'https://www.goodfon.com/erotic/') directly as input terms in `Search Terms.txt`.
+
 ## v1.0.3 **(current)** 🆕
  - Apply account fallback at the download entry point, including queued downloads after the anonymous IP limit is reached.
  - Retry the same wallpaper with the next available account when the current account reaches its daily limit.

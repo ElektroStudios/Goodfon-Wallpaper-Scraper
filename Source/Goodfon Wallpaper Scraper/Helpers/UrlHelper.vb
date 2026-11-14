@@ -11,7 +11,9 @@ Option Infer Off
 Imports System.Collections.Generic
 Imports System.Diagnostics
 Imports System.Diagnostics.CodeAnalysis
+Imports System.IO
 Imports System.Security.Cryptography
+Imports System.Text
 
 #End Region
 
@@ -42,6 +44,11 @@ Friend Enum GoodfonUrlKind As Integer ' NOSONAR
     ''' </summary>
     SearchQuery = 3
 
+    ''' <summary>
+    ''' A direct URL to a specific wallpaper page  (e.g., "https://www.goodfon.com/erotic").
+    ''' </summary>
+    DirectURL = 4
+
 End Enum
 
 #End Region
@@ -54,6 +61,54 @@ End Enum
 Friend Module UrlHelper
 
 #Region " Static Methods "
+
+    ''' <summary>
+    ''' Sanitizes a given URL to create a safe, valid, and length-compliant directory name for the file system.
+    ''' </summary>
+    ''' <param name="url">The raw URL string that needs to be sanitized.</param>
+    ''' <returns>A sanitized string completely safe to be used as a folder name.</returns>
+    ''' <exception cref="ArgumentNullException">Thrown immediately if the provided URL is null, empty, or consists only of white-space characters.</exception>
+    <DebuggerStepThrough>
+    Friend Function SanitizeUrlForFolderName(url As String) As String
+
+        If String.IsNullOrWhiteSpace(url) Then
+            Throw New ArgumentNullException(NameOf(url), "The provided URL cannot be null, empty, or whitespace.")
+        End If
+
+        Dim parsedUri As Uri = Nothing
+        Dim baseName As String = url
+
+        ' Extract Host and Path to discard protocols like http:// or https://
+        If Uri.TryCreate(url, UriKind.Absolute, parsedUri) Then
+            baseName = $"{parsedUri.Host}{parsedUri.PathAndQuery}"
+        End If
+
+        Dim invalidFileNameChars As Char() = Path.GetInvalidFileNameChars()
+        Dim safeNameBuilder As New StringBuilder()
+        Dim currentCharacter As Char
+        Dim isInvalid As Boolean
+
+        For Each currentCharacter In baseName
+            ' Explicitly replacing slashes alongside system-defined invalid characters
+            isInvalid = (Array.IndexOf(invalidFileNameChars, currentCharacter) >= 0) OrElse (currentCharacter = "/"c) OrElse (currentCharacter = "\"c)
+
+            If isInvalid Then
+                safeNameBuilder.Append("_"c)
+            Else
+                safeNameBuilder.Append(currentCharacter)
+            End If
+        Next
+
+        Dim result As String = safeNameBuilder.ToString().TrimEnd("_"c)
+
+        Dim maxFolderNameLength As Integer = 100
+
+        If result.Length > maxFolderNameLength Then
+            result = result.Substring(0, maxFolderNameLength)
+        End If
+
+        Return result
+    End Function
 
     ''' <summary>
     ''' Gets the relative part of the specified URL, starting from the slash that follows the ".com" domain suffix.
@@ -263,6 +318,11 @@ Friend Module UrlHelper
             Return GoodfonUrlKind.SearchQuery
         End If
 
+        If baseUrl.IndexOf("HTTP", StringComparison.OrdinalIgnoreCase) = 0 AndAlso
+           baseUrl.IndexOf(".com/", StringComparison.OrdinalIgnoreCase) > 0 Then
+            Return GoodfonUrlKind.DirectURL
+        End If
+
         Return GoodfonUrlKind.Unknown
     End Function
 
@@ -303,6 +363,7 @@ Friend Module UrlHelper
         Dim kind As GoodfonUrlKind = UrlHelper.GetUrlKind(baseUrl)
 
         Select Case kind
+
             Case GoodfonUrlKind.Tag
                 Return If(page = 1, baseUrl, $"{baseUrl}index-{page}.html")
 
@@ -312,8 +373,11 @@ Friend Module UrlHelper
             Case GoodfonUrlKind.SearchQuery
                 Return If(page = 1, baseUrl, $"{baseUrl}&page={page}")
 
+            Case GoodfonUrlKind.DirectURL
+                Return If(page = 1, baseUrl, $"{baseUrl.TrimEnd("/"c)}?page={page}")
+
             Case Else
-                Throw New InvalidOperationException("Cannot identify URL kind (tag, user profile or search query).")
+                Throw New InvalidOperationException("Cannot identify URL kind (tag, user profile, search query or direct URL).")
 
         End Select
     End Function

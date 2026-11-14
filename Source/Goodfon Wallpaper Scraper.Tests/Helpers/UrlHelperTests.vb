@@ -345,7 +345,7 @@ Public NotInheritable Class UrlHelperTests
     <TestMethod>
     Public Sub GetUrlKind_UnsupportedUrls_ReturnsUnknown()
 
-        Assert.AreEqual(GoodfonUrlKind.Unknown, UrlHelper.GetUrlKind("https://www.goodfon.com/cats/"))
+        Assert.AreEqual(GoodfonUrlKind.DirectURL, UrlHelper.GetUrlKind("https://www.goodfon.com/cats/"))
         Assert.AreEqual(GoodfonUrlKind.Unknown, UrlHelper.GetUrlKind(String.Empty))
         ' The markers must not be at the very start of the string.
         Assert.AreEqual(GoodfonUrlKind.Unknown, UrlHelper.GetUrlKind("/tags/cats/"))
@@ -419,8 +419,8 @@ Public NotInheritable Class UrlHelperTests
     <TestMethod>
     Public Sub BuildPageUrl_UnknownUrlKind_ThrowsInvalidOperationException()
 
-        Assert.ThrowsExactly(Of InvalidOperationException)(Sub() UrlHelper.BuildPageUrl("https://www.goodfon.com/cats/", 1))
-        Assert.ThrowsExactly(Of InvalidOperationException)(Sub() UrlHelper.BuildPageUrl("https://www.goodfon.com/cats/", 2))
+        Assert.ThrowsExactly(Of InvalidOperationException)(Sub() UrlHelper.BuildPageUrl("goodfon/cats/", 1))
+        Assert.ThrowsExactly(Of InvalidOperationException)(Sub() UrlHelper.BuildPageUrl("goodfon.com/cats/", 2))
     End Sub
 
     ''' <summary>

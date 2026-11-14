@@ -327,11 +327,11 @@ Public Module Program
             End If
 
             Using client As New HttpClient(New HttpClientHandler() With {
-               .UseCookies = False,
-               .AutomaticDecompression = DecompressionMethods.GZip Or DecompressionMethods.Deflate
-            }) With {
-                .Timeout = AppGlobals.HttpClientTimeOut
-            }
+                   .UseCookies = False,
+                   .AutomaticDecompression = DecompressionMethods.GZip Or DecompressionMethods.Deflate
+                }) With {
+                    .Timeout = AppGlobals.HttpClientTimeOut
+                }
 
                 client.DefaultRequestHeaders.Clear()
                 client.DefaultRequestHeaders.Add("User-Agent", Guid.NewGuid().ToString())
@@ -346,22 +346,29 @@ Public Module Program
                     Program.WriteColoredLine($"Processing search term {termIndex + 1:N0} of {searchTermsCount:N0}: ""{searchTerm}"" ...", ConsoleColor.White)
                     Console.WriteLine()
 
-                    Dim outputDirPath As String = $"{AppGlobals.OutputDirPath}\{searchTerm}"
+                    If searchTerm.StartsWith("http") Then
+                        Dim outputDirPath As String = $"{AppGlobals.OutputDirPath}\{UrlHelper.SanitizeUrlForFolderName(searchTerm)}"
+                        Program.WriteColoredLine($"Discovering direct URL: {searchTerm}", ConsoleColor.Cyan)
+                        Program.ProcessUrl(searchTerm, client, outputDirPath).Wait()
+                    Else
+                        Dim outputDirPath As String = $"{AppGlobals.OutputDirPath}\{searchTerm}"
 
-                    Dim wallpaperUserUrl As String = UrlHelper.BuildUserProfileUrl(searchTerm)
-                    Program.WriteColoredLine($"Discovering user profile page: {wallpaperUserUrl}", ConsoleColor.Cyan)
-                    Program.ProcessUrl(wallpaperUserUrl, client, outputDirPath).Wait()
+                        Dim wallpaperUserUrl As String = UrlHelper.BuildUserProfileUrl(searchTerm)
+                        Program.WriteColoredLine($"Discovering user profile page: {wallpaperUserUrl}", ConsoleColor.Cyan)
+                        Program.ProcessUrl(wallpaperUserUrl, client, outputDirPath).Wait()
 
-                    For tagIndex As Integer = 0 To 3
-                        Dim wallpaperTagUrl As String = UrlHelper.BuildTagUrl(searchTerm, tagIndex)
+                        For tagIndex As Integer = 0 To 3
+                            Dim wallpaperTagUrl As String = UrlHelper.BuildTagUrl(searchTerm, tagIndex)
 
-                        Program.WriteColoredLine($"Discovering tag page: {wallpaperTagUrl}", ConsoleColor.Cyan)
-                        Program.ProcessUrl(wallpaperTagUrl, client, outputDirPath).Wait()
-                    Next tagIndex
+                            Program.WriteColoredLine($"Discovering tag page: {wallpaperTagUrl}", ConsoleColor.Cyan)
+                            Program.ProcessUrl(wallpaperTagUrl, client, outputDirPath).Wait()
+                        Next tagIndex
 
-                    Dim wallpaperSearchUrl As String = UrlHelper.BuildSearchUrl(searchTerm)
-                    Program.WriteColoredLine($"Discovering search query results: {wallpaperSearchUrl}", ConsoleColor.Cyan)
-                    Program.ProcessUrl(wallpaperSearchUrl, client, outputDirPath).Wait()
+                        Dim wallpaperSearchUrl As String = UrlHelper.BuildSearchUrl(searchTerm)
+                        Program.WriteColoredLine($"Discovering search query results: {wallpaperSearchUrl}", ConsoleColor.Cyan)
+                        Program.ProcessUrl(wallpaperSearchUrl, client, outputDirPath).Wait()
+                    End If
+
 #If DEBUG Then
                     Thread.CurrentThread.Join(0) ' Prevents ContextSwitchDeadlock on long-running iterations.
 #End If
@@ -1113,7 +1120,7 @@ Public Module Program
                 Throw New InvalidOperationException("Failed to identify last page number in the provided HTML.")
             End If
 
-        ElseIf UrlHelper.GetUrlKind(baseUrl) = GoodfonUrlKind.Unknown Then
+        ElseIf (UrlHelper.GetUrlKind(baseUrl) = GoodfonUrlKind.DirectURL) OrElse (UrlHelper.GetUrlKind(baseUrl) = GoodfonUrlKind.Unknown) Then
             totalWallpapers = GoodfonHtmlParser.CalculateTotalWallpapers(finalLastPage, 0)
 
         Else
